@@ -69,3 +69,6 @@ leap_binder.set_metadata(function=metadata_one_hot_digit, name='metadata_one_hot
 leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
 leap_binder.set_visualizer(name='horizontal_bar_classes', function=bar_visualizer,
                            visualizer_type=LeapHorizontalBar.type)
+
+if __name__ == '__main__':
+    leap_binder.check()
