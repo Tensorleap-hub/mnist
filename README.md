@@ -51,6 +51,11 @@ The Dashboard allows us to visualize and investigate each metadata interactively
 
 ![Average Euclidean Distance vs Average Loss (click-to-zoom)](images/Metrics_Analysis.png)
 
+The visualization below displays a histogram of the average loss vs the Euclidean distance. It reveals a strong 
+correlation between distance and loss - samples with high distance values tend to have higher losses.
+
+![centroid](images/centroid.png)
+
 ## Summary
 
 The **Tensorleap** platform provides powerful tools for analyzing and understanding deep learning models. In this example, we presented only a few examples of the types of insights that can be gained using the platform.&#x20;

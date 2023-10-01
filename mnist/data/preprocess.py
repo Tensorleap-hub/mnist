@@ -1,17 +1,17 @@
-
 from typing import Union, Iterable
-
 import numpy as np
 from numpy import ndarray
 from keras.datasets import mnist
 from keras.utils import to_categorical
 import os
 
+from mnist.config import CONFIG
+
+
 def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tuple, dict]:
     # Check if the data directory exists, and create it if not
     if local_file_path is None:
-        home_dir = os.getenv("HOME")
-        local_file_path = os.path.join(home_dir, "Tensorleap_data", 'mnist')
+        local_file_path = CONFIG['local_file_path']
 
     if not os.path.exists(local_file_path):
         os.makedirs(local_file_path)
@@ -34,8 +34,3 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
 
     data = np.load(data_file)
     return data
-
-
-
-
-

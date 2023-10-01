@@ -1,5 +1,4 @@
 from typing import List, Union, Dict
-import numpy as np
 
 # Tensorleap imports
 from code_loader import leap_binder
@@ -11,16 +10,16 @@ from mnist.utils import *
 from mnist.config import CONFIG
 
 
-# Preprocess Function
 def preprocess_func_leap() -> List[PreprocessResponse]:
     data = preprocess_func(CONFIG['local_file_path'])
     train_X, val_X, train_Y, val_Y = data['train_X'], data['val_X'], data['train_Y'], data['val_Y']
 
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
-    # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs 
+    # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
     train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y})
     val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y})
+    leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
 
@@ -56,6 +55,16 @@ def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str
     return res
 
 
+def metadata_euclidean_distance_from_class_centroid(idx: int,
+                                                    preprocess: Union[PreprocessResponse, list]) -> np.ndarray:
+    ### calculate euclidean distance from the average image of the specific class
+    sample_input = preprocess.data['images'][idx]
+    label = preprocess.data['labels'][idx]
+    label = str(np.argmax(label))
+    class_average_image = leap_binder.cache_container["classes_avg_images"][label]
+    return np.linalg.norm(class_average_image - sample_input)
+
+
 def bar_visualizer(data: np.ndarray) -> LeapHorizontalBar:
     return LeapHorizontalBar(data, CONFIG['LABELS'])
 
@@ -66,6 +75,8 @@ leap_binder.set_input(function=input_encoder, name='image')
 leap_binder.set_ground_truth(function=gt_encoder, name='classes')
 leap_binder.set_metadata(function=metadata_sample_index, name='metadata_sample_index')
 leap_binder.set_metadata(function=metadata_one_hot_digit, name='metadata_one_hot_digit')
+leap_binder.set_metadata(function=metadata_euclidean_distance_from_class_centroid,
+                         name='euclidean_diff_from_class_centroid')
 leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
 leap_binder.set_visualizer(name='horizontal_bar_classes', function=bar_visualizer,
                            visualizer_type=LeapHorizontalBar.type)

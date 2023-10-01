@@ -62,6 +62,9 @@ decorators:
         - inputKey: ground_truth
           operation: Metric
           id: '29'
+        - inputKey: ground_truth
+          operation: Metric
+          id: '30'
   - operation: Visualizer
     data:
       type: Visualizer
@@ -121,6 +124,27 @@ decorators:
         - ground_truth
       user_unique_name: Accuracy
     id: '29'
+    inputs:
+      prediction:
+        - outputKey: feature_map
+          operation: Dense
+          name: dense
+          id: '1'
+      ground_truth:
+        - outputKey: classes
+          operation: GroundTruth
+          id: '23'
+    outputs: {}
+  - operation: Metric
+    data:
+      type: Metric
+      name: ConfusionMatrixClassification
+      metric_name: ConfusionMatrixClassification
+      arg_names:
+        - ground_truth
+        - prediction
+      user_unique_name: ConfusionMatrixClassification
+    id: '30'
     inputs:
       prediction:
         - outputKey: feature_map
