@@ -25,8 +25,7 @@ Furthermore, the visualization shows that this sample appears to be more closely
 
 The Tensorleap platform provides a way to further explore the model's response to specific data samples. For example, from the results below, we can see that the model's prediction was **9** while the ground truth is **8**. 
 
-![Heat Maps Correlated for each Output](../.gitbook/assets/mnist-sample-analysis.gif)
-.............
+![Heat Maps Correlated for each Output](images/mnist-sample-analysis.gif)
 
 ### Loss analysis
 
