@@ -1,13 +1,10 @@
-codeIntegrationId: 65647e603921f60012723525
-projectId: 65647e4d3921f60012723521
+codeIntegrationId: 66c71b323f440028ad60434c
+projectId: 66c71b2e3f440028ad604348
 secretId: ""
 entryFile: leap_binder.py
-include:
-    - leap_binder.py
-    - leap_test.py
-    - leap_custom_test.py
-    - leap_mapping.yaml
-    - mnist/config.py
-    - mnist/project_config.yaml
-    - mnist/utils.py
-    - mnist/data/preprocess.py
+#include:
+#  - leap_binder.py
+#  - mnist/*.py
+#  - mnist/*/*.py
+#  - mnist/*.yaml
+
