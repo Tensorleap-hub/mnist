@@ -5,9 +5,35 @@ from tensorflow.keras import layers, models, datasets, callbacks
 from code_loader.experiment_api.experiment import Experiment
 from code_loader import init_experiment, Client
 
+#####################################################################
+#### This example showcase TL experiment tracking interface use #####
+#####################################################################
 
 class LeapTrackCheckpoint(callbacks.Callback):
-    def __init__(self, train_data, val_data, leap_tracker: Experiment,  save_path: str, save_freq: int = 10, save_weights_flag: bool =  False):
+    """
+    A custom Keras callback for tracking and saving model checkpoints during training.
+
+    Attributes:
+        train_data (tuple): A tuple containing training data and labels.
+        val_data (tuple): A tuple containing validation data and labels.
+        leap_tracker (Experiment): An instance of Tensorleap's Experiment class for logging and tracking.
+        save_freq (int): Frequency (in epochs) to save the model checkpoint.
+        save_path (str): Path template where model checkpoints will be saved.
+        save_weights_flag (bool): Whether to save model weights with unique tags per epoch.
+    """
+    def __init__(self, train_data, val_data, leap_tracker: Experiment,  save_path: str, save_freq: int = 10, save_weights_flag: bool = False):
+        """
+        Initializes the LeapTrackCheckpoint callback.
+
+        Args:
+            train_data (tuple): A tuple containing training data and labels.
+            val_data (tuple): A tuple containing validation data and labels.
+            leap_tracker (Experiment): An instance of Tensorleap's Experiment class for logging and tracking.
+            save_path (str): Path template where model checkpoints will be saved.
+            save_freq (int, optional): Frequency (in epochs) to save the model checkpoint. Defaults to 10.
+            save_weights_flag (bool, optional): Whether to save model weights with unique tags per epoch. Defaults to False.
+        """
+
         super(LeapTrackCheckpoint, self).__init__()
         self.min_loss = np.inf
         self.train_data = train_data
@@ -18,18 +44,37 @@ class LeapTrackCheckpoint(callbacks.Callback):
         self.save_weights_flag = save_weights_flag
 
     def on_epoch_end(self, epoch, logs=None):
+        """
+        Called at the end of each epoch during training.
 
+        Args:
+            epoch (int): The current epoch index.
+            logs (dict, optional): A dictionary of logs from the training process.
+        """
         # Custom behavior: print a message, log something, etc.
         if (epoch + 1) % self.save_freq == 0:
             self.custom_behavior(epoch)
 
     def on_train_end(self, logs=None):
+        """
+        Called at the end of the training process.
+
+        Args:
+            logs (dict, optional): A dictionary of logs from the training process.
+        """
         self.custom_behavior("last", final_epoch=True)
 
     def custom_behavior(self, epoch, final_epoch=False):
+        """
+        Custom behavior to save the model and log metrics at the end of an epoch or training.
+
+        Args:
+            epoch (int or str): The current epoch index or 'last' for the final epoch.
+            final_epoch (bool, optional): Flag indicating if this is the final epoch. Defaults to False.
+        """
         if final_epoch:
-            print(f"\nSaving model at the last epoch to {self.save_path.format(epoch='last')}")
-            file_path = self.save_path.format(epoch='last')
+            file_path = 'model_checkpoint_epoch_last'
+            print(f"\nSaving model at the last epoch to {file_path}")
         else:
             print(f"\nEpoch {epoch + 1}: saving model to {self.save_path.format(epoch=epoch + 1)}")
             file_path = self.save_path.format(epoch=epoch + 1)
@@ -51,6 +96,7 @@ class LeapTrackCheckpoint(callbacks.Callback):
             tags += [f"epoch_{epoch}"]
 
         # Send trial metrics to TL
+        print('Sending trial metrics to Tensorleap')
         self.leap_tracker.log_epoch(epoch=epoch, metrics={
             "train_loss": train_loss,
             "train_acc": train_acc,
@@ -60,25 +106,20 @@ class LeapTrackCheckpoint(callbacks.Callback):
 
 
 
-
-
 def main():
-
 
     # Load and preprocess the MNIST dataset
     (x_train, y_train), (x_test, y_test) = datasets.mnist.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0  # Normalize to [0, 1]
 
-    # downsample
+    # Downsample for test
     n = 20
     x_train, y_train = x_train[:n], y_train[:n]
     x_test, y_test = x_test[:n], y_test[:n]
 
-    # Add a channel dimension to the data (required for CNNs)
+    # Add a channel dimension to the data
     x_train = x_train[..., tf.newaxis]
     x_test = x_test[..., tf.newaxis]
-
-
 
     input_shape = (28, 28, 1)
 
@@ -90,9 +131,11 @@ def main():
 
     # Client: add auth credentials: default will fetch configured cli auth
     # Working dir: path where leap.yaml is saved
-    exp: Experiment = init_experiment(experimentName="Exp1", description="", working_dir="/Users/daniellebenbashat/TL/leap_hub/mnist", client=None)
-
-    exp.set_notes({
+    leap_tracker: Experiment = init_experiment(experiment_name="ExpTrial", project_name="mnist_exp",
+                                               code_integration_name="mnist",
+                                               description="", client=None)
+    # Log experiment metadata properties
+    leap_tracker.set_properties({
         "description": "This is an example for TL training tracking",
         "dataset": "mnist",
         "model": "Vanilla CNN",
@@ -117,11 +160,12 @@ def main():
         layers.Dense(64, activation='relu'),
         layers.Dense(10, activation='softmax')
     ])
+
     # Set up the custom checkpoint callback
     checkpoint_callback = LeapTrackCheckpoint(
         train_data=(x_train, y_train),
         val_data=(x_test, y_test),
-        leap_tracker=exp,
+        leap_tracker=leap_tracker,
         save_freq=10,
         save_path='model_checkpoint_epoch_{epoch:02d}.h5'
     )
