@@ -10,19 +10,22 @@ decorators:
         - inputKey: input
           operation: Conv2D
           name: conv2d
-          id: '19'
+          id: '8'
         - inputKey: data
           operation: Visualizer
           id: '24'
   - operation: CategoricalCrossentropy
     data:
       type: Loss
+      arg_names:
+        - prediction
+        - ground_truth
     id: '21'
     inputs:
       prediction:
         - outputKey: feature_map
           operation: Dense
-          name: dense
+          name: dense_1
           id: '1'
       ground_truth:
         - outputKey: classes
@@ -38,6 +41,8 @@ decorators:
       type: Optimizer
       custom_input_keys:
         - 22-0
+      arg_names:
+        - '0'
     id: '22'
     inputs:
       '0':
@@ -56,15 +61,15 @@ decorators:
         - inputKey: ground_truth
           operation: CategoricalCrossentropy
           id: '21'
-        - inputKey: data
-          operation: Visualizer
-          id: '27'
         - inputKey: ground_truth
           operation: Metric
           id: '29'
         - inputKey: ground_truth
           operation: Metric
           id: '30'
+        - inputKey: data
+          operation: Visualizer
+          id: '27'
   - operation: Visualizer
     data:
       type: Visualizer
@@ -111,7 +116,7 @@ decorators:
       data:
         - outputKey: feature_map
           operation: Dense
-          name: dense
+          name: dense_1
           id: '1'
     outputs: {}
   - operation: Metric
@@ -128,7 +133,7 @@ decorators:
       prediction:
         - outputKey: feature_map
           operation: Dense
-          name: dense
+          name: dense_1
           id: '1'
       ground_truth:
         - outputKey: classes
@@ -149,7 +154,7 @@ decorators:
       prediction:
         - outputKey: feature_map
           operation: Dense
-          name: dense
+          name: dense_1
           id: '1'
       ground_truth:
         - outputKey: classes
@@ -160,5 +165,5 @@ layers:
   - operation: Dense
     data:
       prediction_type: classes
-    name: dense
+    name: dense_1
     id: '1'
