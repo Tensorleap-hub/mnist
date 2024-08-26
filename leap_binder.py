@@ -1,4 +1,5 @@
 from typing import List, Union, Dict
+import os
 
 # Tensorleap imports
 from code_loader import leap_binder
@@ -11,8 +12,20 @@ from mnist.config import CONFIG
 
 
 def preprocess_func_leap() -> List[PreprocessResponse]:
-    data = preprocess_func(CONFIG['local_file_path'])
+    root_path = os.path.expanduser("~")
+    local_file_path = os.path.join(root_path, CONFIG['local_file_path'])
+    data = preprocess_func(local_file_path)
     train_X, val_X, train_Y, val_Y = data['train_X'], data['val_X'], data['train_Y'], data['val_Y']
+
+    # Get random indices for downsampling
+    indices = np.random.choice(len(train_X), CONFIG['train_size'], replace=False)
+
+    # Downsample the datasets using the random indices
+    train_X, train_Y = train_X[indices], train_Y[indices]
+
+    # Repeat for the validation set if needed
+    indices_val = np.random.choice(len(val_X), CONFIG['val_size'], replace=False)
+    val_X, val_Y = val_X[indices_val], val_Y[indices_val]
 
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
