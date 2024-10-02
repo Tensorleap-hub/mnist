@@ -12,7 +12,7 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
     # Check if the data directory exists, and create it if not
     if local_file_path is None:
         local_file_path = CONFIG['local_file_path']
-
+    local_file_path = os.path.join(os.path.expanduser('~'), CONFIG['local_file_path'])
     if not os.path.exists(local_file_path):
         os.makedirs(local_file_path)
 
