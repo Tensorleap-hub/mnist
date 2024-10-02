@@ -17,3 +17,6 @@ torch = "1.12.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+test = "leap_custom_test: check_custom_test"

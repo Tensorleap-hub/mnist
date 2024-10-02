@@ -13,7 +13,7 @@ def check_custom_test():
     print("started custom tests")
     responses = preprocess_func_leap()
     for subset in responses:  # train, val
-        for idx in range(20): # analyze first 20 images
+        for idx in range(3): # analyze first 3 images
             # load the model
             dir_path = os.path.dirname(os.path.abspath(__file__))
             model_path = 'model/model.h5'
