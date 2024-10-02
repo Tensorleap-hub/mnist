@@ -17,6 +17,9 @@ decorators:
   - operation: CategoricalCrossentropy
     data:
       type: Loss
+      arg_names:
+        - prediction
+        - ground_truth
     id: '21'
     inputs:
       prediction:
@@ -38,6 +41,8 @@ decorators:
       type: Optimizer
       custom_input_keys:
         - 22-0
+      arg_names:
+        - '0'
     id: '22'
     inputs:
       '0':
@@ -156,9 +161,26 @@ decorators:
           operation: GroundTruth
           id: '23'
     outputs: {}
+  - operation: Metric
+    data:
+      type: Metric
+      name: metrics
+      metric_name: metrics
+      arg_names:
+        - output_pred
+      user_unique_name: metrics
+    id: '31'
+    inputs:
+      output_pred:
+        - outputKey: feature_map
+          operation: Dense
+          name: dense
+          id: '1'
+    outputs: {}
 layers:
   - operation: Dense
     data:
       prediction_type: classes
     name: dense
     id: '1'
+
