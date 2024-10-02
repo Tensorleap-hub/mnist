@@ -1,50 +1,53 @@
-import matplotlib.pyplot as plt
-
-from leap_binder import *
+from leap_binder import input_encoder, preprocess_func_leap, gt_encoder, bar_visualizer, leap_binder, metrics
 import tensorflow as tf
 import os
 import numpy as np
-import pandas as pd
-
-from mnist.config import CONFIG
-
-
-def plot_horizontal_bar(y):
-    df = pd.DataFrame({'labels': CONFIG['LABELS'], 'val': y})
-    ax = df.plot.barh(x='labels', y='val')
-    plt.show()
+from code_loader.helpers import visualize
 
 
 def check_custom_test():
+    check_generic = True
+    plot_vis = True
+    if check_generic:
+        leap_binder.check()
     print("started custom tests")
     responses = preprocess_func_leap()
-    train = responses[0]
-    val = responses[1]
-    responses_set = val
+    for subset in responses:  # train, val
+        for idx in range(20): # analyze first 20 images
+            # load the model
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+            model_path = 'model/model.h5'
+            cnn = tf.keras.models.load_model(os.path.join(dir_path, model_path))
 
-    for idx in range(20):
+            # get input and gt
+            image = input_encoder(idx, subset)
+            gt = gt_encoder(idx, subset)
 
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        model_path = 'model/model.h5'
-        cnn = tf.keras.models.load_model(os.path.join(dir_path, model_path))
+            # add batch to input & gt
+            concat = np.expand_dims(image, axis=0)
+            gt_expend = np.expand_dims(gt, axis=0)
 
-        # get input and gt
-        image = input_encoder(idx, responses_set)
-        gt = gt_encoder(idx, responses_set)
+            # infer model
+            y_pred = cnn([concat])
 
-        concat = np.expand_dims(image, axis=0)
-        y_pred = cnn([concat])
-        gt_expend = np.expand_dims(gt, axis=0)
-        y_true = tf.convert_to_tensor(gt_expend)
+            # get inputs & outputs (no batch)
+            gt_vis = bar_visualizer(gt)
+            pred_vis = bar_visualizer(y_pred[0].numpy())
 
-        # get meatdata
-        sample_index = metadata_sample_index(idx, responses_set)
-        one_hot_digit = metadata_one_hot_digit(idx, responses_set)
-        euclidean_distance_from_class_centroid = metadata_euclidean_distance_from_class_centroid(idx, responses_set)
+            # plot inputs & outputs
+            if plot_vis:
+                visualize(gt_vis)
+                visualize(pred_vis)
 
-        # get visualizer
-        plot_horizontal_bar(gt)
-        plot_horizontal_bar(y_pred.numpy().reshape(10, ))
+            # print metrics
+            metric_result = metrics(y_pred.numpy())
+            print(metric_result)
+
+
+            # print metadata
+            for metadata_handler in leap_binder.setup_container.metadata:
+                curr_metadata = metadata_handler.function(idx, subset)
+                print(f"Metadata {metadata_handler.name}: {curr_metadata}")
 
     print("finish tests")
 
