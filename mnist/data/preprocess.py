@@ -30,7 +30,8 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
         val_Y = to_categorical(val_Y)  # Hot Vector
 
         # Save the data
-        np.savez(data_file, train_X=train_X, val_X=val_X, train_Y=train_Y, val_Y=val_Y)
+        np.savez(data_file, x_train=train_X, x_test=val_X, y_train=train_Y, y_test=val_Y)
 
     data = np.load(data_file)
+
     return data
