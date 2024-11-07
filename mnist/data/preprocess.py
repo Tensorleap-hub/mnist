@@ -31,7 +31,17 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
 
         # Save the data
         np.savez(data_file, x_train=train_X, x_test=val_X, y_train=train_Y, y_test=val_Y)
+    else:
+        data = np.load(data_file)
+        train_X, val_X, train_Y, val_Y = data['x_train'], data['x_test'], data['y_train'], data['y_test']
+        train_X = np.expand_dims(train_X, axis=-1)  # Reshape :,28,28 -> :,28,28,1
+        train_X = train_X / 255  # Normalize to [0,1]
+        train_Y = to_categorical(train_Y)  # Hot Vector
 
-    data = np.load(data_file)
+        val_X = np.expand_dims(val_X, axis=-1)  # Reshape :,28,28 -> :,28,28,1
+        val_X = val_X / 255  # Normalize to [0,1]
+        val_Y = to_categorical(val_Y)  # Hot Vector
+        np.savez(data_file, x_train=train_X, x_test=val_X, y_train=train_Y, y_test=val_Y)
+        data = np.load(data_file)
 
     return data
