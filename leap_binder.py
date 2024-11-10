@@ -8,8 +8,7 @@ from numpy.typing import NDArray
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
-    data = preprocess_func(CONFIG['local_file_path'])
-    train_X, val_X, train_Y, val_Y = data['x_train'], data['x_test'], data['y_train'], data['y_test']
+    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
 
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
