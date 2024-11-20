@@ -10,4 +10,4 @@ LABELS:
   - "8"
   - "9"
 
-local_file_path: "tensorleap/data/mnist"
+local_file_path: "mnist"
