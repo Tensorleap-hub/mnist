@@ -11,14 +11,15 @@ def check_custom_test():
     if check_generic:
         leap_binder.check()
     print("started custom tests")
+
+    # load the model
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    model_path = 'model/model.h5'
+    cnn = tf.keras.models.load_model(os.path.join(dir_path, model_path))
+
     responses = preprocess_func_leap()
     for subset in responses:  # train, val
-        for idx in range(3): # analyze first 3 images
-            # load the model
-            dir_path = os.path.dirname(os.path.abspath(__file__))
-            model_path = 'model/model.h5'
-            cnn = tf.keras.models.load_model(os.path.join(dir_path, model_path))
-
+        for idx in range(3):  # analyze first 3 images
             # get input and gt
             image = input_encoder(idx, subset)
             gt = gt_encoder(idx, subset)
@@ -42,7 +43,6 @@ def check_custom_test():
             # print metrics
             metric_result = metrics(y_pred.numpy())
             print(metric_result)
-
 
             # print metadata
             for metadata_handler in leap_binder.setup_container.metadata:
