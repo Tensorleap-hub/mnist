@@ -1,8 +1,12 @@
 from typing import Dict
+
+from matplotlib.pyplot import connect
+
 from mnist.data.preprocess import preprocess_func
 from mnist.utils import *
 from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
+from code_loader.inner_leap_binder.inner_classes import leap_input, leap_output
 from numpy.typing import NDArray
 
 
@@ -18,7 +22,6 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
-
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
@@ -68,12 +71,12 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
     return np.linalg.norm(class_average_image - sample_input)
 
 
-@tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
+@tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type, connects_to={"gt":(gt_encoder,), "pred":(leap_output(0),)})
 def bar_visualizer(data: NDArray[float]) -> LeapHorizontalBar:
     return LeapHorizontalBar(data, labels=CONFIG['LABELS'])
 
 
-@tensorleap_custom_metric('metrics')
+@tensorleap_custom_metric('metrics', connects_to={"pred": (leap_output(0),)})
 def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
     prob = output_pred.max(axis=-1)
     pred_idx = output_pred.argmax(axis=-1)
@@ -84,7 +87,7 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
 
 # Adding a name to the prediction, and supplying it with label names.
 leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
-
+leap_binder.set_model_inputs((input_encoder,))
 
 if __name__ == '__main__':
     leap_binder.check()

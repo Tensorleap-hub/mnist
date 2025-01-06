@@ -2,10 +2,11 @@ from leap_binder import input_encoder, preprocess_func_leap, gt_encoder, bar_vis
 import tensorflow as tf
 import os
 import numpy as np
-from code_loader.helpers import visualize
-
-
+#from helpers.visualizer.visualize import visualize TODO TOM (return)
+from code_loader.inner_leap_binder.mapping import LeapMapping
 def check_custom_test():
+    mapping_obj = LeapMapping(leap_binder.setup_container, leap_binder._mappings)
+    mapping_obj.create_partial_mapping()
     check_generic = True
     plot_vis = True
     if check_generic:
@@ -50,7 +51,6 @@ def check_custom_test():
                 print(f"Metadata {metadata_handler.name}: {curr_metadata}")
 
     print("finish tests")
-
 
 if __name__ == '__main__':
     check_custom_test()
