@@ -7,15 +7,24 @@ import os
 
 from mnist.config import CONFIG
 
+def get_full_path(path):
+    if os.path.isabs(path):
+        return path
+    elif 'IS_CLOUD' in os.environ and os.path.exists("/nfs"): # SaaS env
+        return os.path.join("/nfs", path)
+    elif 'GENERIC_HOST_PATH' in os.environ: # OnPrem
+        return os.path.join(os.environ['GENERIC_HOST_PATH'], path)
+    else:
+        return os.path.join(os.path.expanduser('~'), 'tensorleap/data', CONFIG['local_file_path'])
+
 
 def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tuple, dict]:
     # Check if the data directory exists, and create it if not
     if local_file_path is None:
         local_file_path = CONFIG['local_file_path']
-    local_file_path = os.path.join(os.path.expanduser('~'), CONFIG['local_file_path'])
+    local_file_path = get_full_path(local_file_path)
     if not os.path.exists(local_file_path):
         os.makedirs(local_file_path)
-
     data_file = os.path.join(local_file_path, 'mnist.npz')
 
     if not os.path.exists(data_file):
