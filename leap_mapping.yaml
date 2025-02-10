@@ -43,15 +43,15 @@ decorators:
         - inputKey: ground_truth
           operation: CategoricalCrossentropy
           id: '21'
-        - inputKey: data
-          operation: Visualizer
-          id: '27'
         - inputKey: ground_truth
           operation: Metric
           id: '29'
         - inputKey: ground_truth
           operation: Metric
           id: '30'
+        - inputKey: gt
+          operation: Visualizer
+          id: '32'
   - operation: Visualizer
     data:
       type: Visualizer
@@ -67,39 +67,6 @@ decorators:
         - outputKey: image
           operation: Input
           id: '20'
-    outputs: {}
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: horizontal_bar_classes
-      visualizer_name: horizontal_bar_classes
-      visualizer_type: HorizontalBar
-      arg_names:
-        - data
-      user_unique_name: horizontal_bar_classes_gt
-    id: '27'
-    inputs:
-      data:
-        - outputKey: classes
-          operation: GroundTruth
-          id: '23'
-    outputs: {}
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: horizontal_bar_classes
-      visualizer_name: horizontal_bar_classes
-      visualizer_type: HorizontalBar
-      arg_names:
-        - data
-      user_unique_name: horizontal_bar_classes_predict
-    id: '28'
-    inputs:
-      data:
-        - outputKey: feature_map
-          operation: Dense
-          name: dense
-          id: '1'
     outputs: {}
   - operation: Metric
     data:
@@ -158,6 +125,28 @@ decorators:
           operation: Dense
           name: dense
           id: '1'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: horizontal_bar_classes
+      visualizer_name: horizontal_bar_classes
+      visualizer_type: HorizontalBar
+      arg_names:
+        - data
+        - gt
+      user_unique_name: horizontal_bar_classes
+    id: '32'
+    inputs:
+      data:
+        - outputKey: feature_map
+          operation: Dense
+          name: dense
+          id: '1'
+      gt:
+        - outputKey: classes
+          operation: GroundTruth
+          id: '23'
     outputs: {}
 layers:
   - operation: Dense
