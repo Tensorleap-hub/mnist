@@ -28,20 +28,17 @@ def check_custom_test():
 
             # add batch to input & gt
             concat = np.expand_dims(image, axis=0)
-            gt_expend = np.expand_dims(gt, axis=0)
 
             # infer model
             y_pred = cnn([concat])
 
             # get inputs & outputs (no batch)
             both_vis = combined_bar(y_pred[0].numpy(), gt)
-            #pred_vis = combined_bar(y_pred[0].numpy())
 
             # plot inputs & outputs
             if plot_vis:
                 visualize(both_vis)
                 visualize(img_vis)
-                #isualize(pred_vis)
 
             # print metrics
             metric_result = metrics(y_pred.numpy())
