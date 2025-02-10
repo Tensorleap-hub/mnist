@@ -1,4 +1,7 @@
 from typing import Dict
+
+import numpy as np
+
 from mnist.data.preprocess import preprocess_func
 from mnist.utils import *
 from mnist.config import CONFIG
@@ -18,7 +21,6 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
-
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
@@ -69,8 +71,8 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
 
 
 @tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
-def bar_visualizer(data: NDArray[float]) -> LeapHorizontalBar:
-    return LeapHorizontalBar(data, labels=CONFIG['LABELS'])
+def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
+    return LeapHorizontalBar(data, gt=gt, labels=CONFIG['LABELS'])
 
 
 @tensorleap_custom_metric('metrics')
@@ -81,6 +83,10 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
                     'prd_idx': pred_idx}
     return metrics_dict
 
+@tensorleap_custom_visualizer('image_visualizer', LeapDataType.Image)
+def image_visualizer(image: npt.NDArray[np.float32]) -> LeapImage:
+    # TODO: Revert the image normalization if needed
+    return LeapImage((image*255).astype(np.uint8), compress=False)
 
 # Adding a name to the prediction, and supplying it with label names.
 leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])

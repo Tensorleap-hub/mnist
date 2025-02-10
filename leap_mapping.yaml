@@ -31,24 +31,6 @@ decorators:
         - outputKey: classes
           operation: GroundTruth
           id: '23'
-    outputs:
-      loss:
-        - inputKey: '0'
-          operation: Adam
-          id: '22'
-  - operation: Adam
-    data:
-      type: Optimizer
-      custom_input_keys:
-        - 22-0
-      arg_names:
-        - '0'
-    id: '22'
-    inputs:
-      '0':
-        - outputKey: loss
-          operation: CategoricalCrossentropy
-          id: '21'
     outputs: {}
   - operation: GroundTruth
     data:
@@ -183,4 +165,3 @@ layers:
       prediction_type: classes
     name: dense
     id: '1'
-

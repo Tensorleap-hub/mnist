@@ -1,4 +1,5 @@
-from leap_binder import input_encoder, preprocess_func_leap, gt_encoder, bar_visualizer, leap_binder, metrics
+from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
+                         combined_bar, leap_binder, metrics, image_visualizer)
 import tensorflow as tf
 import os
 import numpy as np
@@ -22,23 +23,22 @@ def check_custom_test():
         for idx in range(3):  # analyze first 3 images
             # get input and gt
             image = input_encoder(idx, subset)
+            img_vis = image_visualizer(image)
             gt = gt_encoder(idx, subset)
 
             # add batch to input & gt
             concat = np.expand_dims(image, axis=0)
-            gt_expend = np.expand_dims(gt, axis=0)
 
             # infer model
             y_pred = cnn([concat])
 
             # get inputs & outputs (no batch)
-            gt_vis = bar_visualizer(gt)
-            pred_vis = bar_visualizer(y_pred[0].numpy())
+            both_vis = combined_bar(y_pred[0].numpy(), gt)
 
             # plot inputs & outputs
             if plot_vis:
-                visualize(gt_vis)
-                visualize(pred_vis)
+                visualize(both_vis)
+                visualize(img_vis)
 
             # print metrics
             metric_result = metrics(y_pred.numpy())
