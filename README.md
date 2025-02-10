@@ -88,18 +88,18 @@ curl -s https://raw.githubusercontent.com/tensorleap/leap-cli/master/install.sh 
 To login to Tensorleap:
 
 ```
-tensorleap auth login [api key] [api url].
+tensorleap auth login [api url] -k [api key].
 ```
 
 - API Key is your Tensorleap token (see how to generate a CLI token in the section below).
-- API URL is your Tensorleap environment URL: https://api.CLIENT_NAME.tensorleap.ai/api/v2
+- API URL is your Tensorleap environment URL: https://api.CLIENT-NAME.tensorleap.ai OR http://localhost:4589
 
 <br>
 
 **How To Generate CLI Token from the UI**
 
 1. Login to the platform in 'CLIENT_NAME.tensorleap.ai'
-2. Scroll down to the bottom of the **Resources Management** page, then click `GENERATE CLI TOKEN` in the bottom-left corner.
+2. Open the left-hand menu, then click `CLI TOKEN`.
 3. Once a CLI token is generated, just copy the whole text and paste it into your shell.
 
 
@@ -108,7 +108,7 @@ tensorleap auth login [api key] [api url].
 To deploy your local changes:
 
 ```
-leap project push
+leap project push model/model.h5
 ```
 
 ### **Tensorleap files**
@@ -134,7 +134,7 @@ include:
 
 ## Testing
 
-To test the system we can run `leap_test.py` file using poetry:
+To test the system we can run `leap_custom_test.py` file using poetry:
 
 ```
 poetry run test
