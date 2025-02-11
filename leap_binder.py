@@ -7,6 +7,7 @@ from mnist.utils import *
 from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
 from numpy.typing import NDArray
+from code_loader.helpers.store.metadata.image import detect_sharpness, get_mean_abs_log_metadata, estimate_noise, total_variation
 
 
 @tensorleap_preprocess()
@@ -87,6 +88,17 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
 def image_visualizer(image: npt.NDArray[np.float32]) -> LeapImage:
     # TODO: Revert the image normalization if needed
     return LeapImage((image*255).astype(np.uint8), compress=False)
+
+@tensorleap_metadata('store')
+def store_metadata(idx: int, preprocess: PreprocessResponse):
+    img = input_encoder(idx, preprocess)
+    metadata = {
+        "sharpness": detect_sharpness(img),
+        "abs_log": get_mean_abs_log_metadata(img),
+        "noise_sigma": estimate_noise(img, 'sigma'),
+        "noise_laplacian": estimate_noise(img, "laplacian"),
+        "total_variation": total_variation(img)}
+    return metadata
 
 # Adding a name to the prediction, and supplying it with label names.
 leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
