@@ -29,7 +29,7 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
 
     if not os.path.exists(data_file):
         # Data file doesn't exist, download and save it
-        (train_X, train_Y), (val_X, val_Y) = mnist.load_data()
+        (train_X, train_Y), (val_X, val_Y) = mnist.load_data(data_file)
     else:
         data = np.load(data_file)
         train_X, val_X, train_Y, val_Y = data['x_train'], data['x_test'], data['y_train'], data['y_test']
