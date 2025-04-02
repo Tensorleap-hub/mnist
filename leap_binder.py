@@ -72,7 +72,7 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
 
 @tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
 def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
-    return LeapHorizontalBar(data, gt=gt, labels=CONFIG['LABELS'])
+    return LeapHorizontalBar(np.squeeze(data), gt=gt, labels=CONFIG['LABELS'])
 
 
 @tensorleap_custom_metric('metrics')

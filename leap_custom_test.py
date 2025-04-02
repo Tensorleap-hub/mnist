@@ -33,7 +33,7 @@ def check_custom_test():
             y_pred = cnn([concat])
 
             # get inputs & outputs (no batch)
-            both_vis = combined_bar(y_pred[0].numpy(), gt)
+            both_vis = combined_bar(y_pred.numpy(), gt)
 
             # plot inputs & outputs
             if plot_vis:
