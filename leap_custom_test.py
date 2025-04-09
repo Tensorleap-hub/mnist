@@ -23,17 +23,19 @@ def check_custom_test():
         for idx in range(3):  # analyze first 3 images
             # get input and gt
             image = input_encoder(idx, subset)
-            img_vis = image_visualizer(image)
             gt = gt_encoder(idx, subset)
 
             # add batch to input & gt
             concat = np.expand_dims(image, axis=0)
+            batch_gt = np.expand_dims(gt, axis=0)
+
 
             # infer model
             y_pred = cnn([concat])
 
             # get inputs & outputs (no batch)
-            both_vis = combined_bar(y_pred.numpy(), gt)
+            both_vis = combined_bar(y_pred.numpy(), batch_gt)
+            img_vis = image_visualizer(concat)
 
             # plot inputs & outputs
             if plot_vis:

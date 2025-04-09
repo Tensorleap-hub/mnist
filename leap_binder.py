@@ -72,7 +72,7 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
 
 @tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
 def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
-    return LeapHorizontalBar(np.squeeze(data), gt=gt, labels=CONFIG['LABELS'])
+    return LeapHorizontalBar(np.squeeze(data), gt=np.squeeze(gt), labels=CONFIG['LABELS'])
 
 
 @tensorleap_custom_metric('metrics')
@@ -86,6 +86,7 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
 @tensorleap_custom_visualizer('image_visualizer', LeapDataType.Image)
 def image_visualizer(image: npt.NDArray[np.float32]) -> LeapImage:
     # TODO: Revert the image normalization if needed
+    image = np.squeeze(image)
     return LeapImage((image*255).astype(np.uint8), compress=False)
 
 # Adding a name to the prediction, and supplying it with label names.
