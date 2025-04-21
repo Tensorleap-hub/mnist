@@ -86,7 +86,7 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
 @tensorleap_custom_visualizer('image_visualizer', LeapDataType.Image)
 def image_visualizer(image: npt.NDArray[np.float32]) -> LeapImage:
     # TODO: Revert the image normalization if needed
-    image = np.squeeze(image)
+    image = image[0, ...]
     return LeapImage((image*255).astype(np.uint8), compress=False)
 
 # Adding a name to the prediction, and supplying it with label names.
