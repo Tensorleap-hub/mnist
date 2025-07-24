@@ -1,4 +1,4 @@
-code-loader
+code-loader==1.0.91.dev12
 code-loader-helpers
 torchvision==0.16.0
 google-cloud==0.34.0

@@ -1,5 +1,5 @@
 from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
-                         combined_bar, leap_binder, metrics, image_visualizer)
+                         combined_bar, leap_binder, image_visualizer, instance_mask_encoder)
 import tensorflow as tf
 import os
 import numpy as np
@@ -22,7 +22,9 @@ def check_custom_test():
     for subset in responses:  # train, val
         for idx in range(3):  # analyze first 3 images
             # get input and gt
+            idx = str(idx)
             image = input_encoder(idx, subset)
+            masks = instance_mask_encoder(idx, subset)
             gt = gt_encoder(idx, subset)
 
             # add batch to input & gt
@@ -43,8 +45,8 @@ def check_custom_test():
                 visualize(img_vis)
 
             # print metrics
-            metric_result = metrics(y_pred.numpy())
-            print(metric_result)
+            # metric_result = metrics(y_pred.numpy())
+            # print(metric_result)
 
             # print metadata
             for metadata_handler in leap_binder.setup_container.metadata:
