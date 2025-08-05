@@ -11,7 +11,7 @@ from code_loader.inner_leap_binder.leapbinder_decorators import *
 from numpy.typing import NDArray
 
 @tensorleap_instances_masks_encoder('image')
-def instance_mask_encoder(idx: str, preprocess: PreprocessResponse) -> (np.ndarray, np.ndarray):
+def instance_mask_encoder(idx: str, preprocess: PreprocessResponse) -> List[ElementInstance]:
     inp = input_encoder(idx, preprocess)
     masks = []
     mask_label_ids = []
