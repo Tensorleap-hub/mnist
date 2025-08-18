@@ -1,6 +1,6 @@
-from typing import Dict
-
-import numpy as np
+from code_loader.contract.mapping import leap_output
+from code_loader.default_metrics import categorical_crossentropy
+from code_loader.visualizers.default_visualizers import default_image_visualizer
 
 from mnist.data.preprocess import preprocess_func
 from mnist.utils import *
@@ -24,8 +24,11 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
-@tensorleap_input_encoder('image')
+@tensorleap_input_encoder('image2')
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
+    return preprocess.data['images'][idx].astype('float32')
+
+def input_encoder_instances(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
     return preprocess.data['images'][idx].astype('float32')
 
 
@@ -83,14 +86,22 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
                     'prd_idx': pred_idx}
     return metrics_dict
 
-@tensorleap_custom_visualizer('image_visualizer', LeapDataType.Image)
-def image_visualizer(image: npt.NDArray[np.float32]) -> LeapImage:
-    # TODO: Revert the image normalization if needed
-    image = image[0, ...]
-    return LeapImage((image*255).astype(np.uint8), compress=False)
 
-# Adding a name to the prediction, and supplying it with label names.
-leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
+@tensorleap_custom_loss('categorical_crossentropy_loss')
+def categorical_crossentropy_loss(ground_truth: np.array, prediction: np.array) -> np.array:
+    return categorical_crossentropy(ground_truth, prediction)
+
+
+@tensorleap_custom_visualizer('default_image_visualizer', LeapImage.type)
+def image_visualizer(data: np.float32):
+    return default_image_visualizer(data)
+
+
+
+# # Adding a name to the prediction, and supplying it with label names.
+# leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
+# leap_binder.add_prediction(name='classes2', labels=CONFIG['LABELS'])
+
 
 
 if __name__ == '__main__':
