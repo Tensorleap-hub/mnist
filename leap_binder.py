@@ -1,4 +1,3 @@
-from code_loader.contract.mapping import leap_output
 from code_loader.default_metrics import categorical_crossentropy
 from code_loader.visualizers.default_visualizers import default_image_visualizer
 
@@ -22,13 +21,11 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     response = [train, val]
     return response
 
+
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
-@tensorleap_input_encoder('image2')
+@tensorleap_input_encoder('image')
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    return preprocess.data['images'][idx].astype('float32')
-
-def input_encoder_instances(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
     return preprocess.data['images'][idx].astype('float32')
 
 
@@ -92,15 +89,10 @@ def categorical_crossentropy_loss(ground_truth: np.array, prediction: np.array) 
     return categorical_crossentropy(ground_truth, prediction)
 
 
-@tensorleap_custom_visualizer('default_image_visualizer', LeapImage.type)
+@tensorleap_custom_visualizer('default_image_visualizer', LeapDataType.Image)
 def image_visualizer(data: np.float32):
     return default_image_visualizer(data)
 
-
-
-# # Adding a name to the prediction, and supplying it with label names.
-# leap_binder.add_prediction(name='classes', labels=CONFIG['LABELS'])
-# leap_binder.add_prediction(name='classes2', labels=CONFIG['LABELS'])
 
 
 
