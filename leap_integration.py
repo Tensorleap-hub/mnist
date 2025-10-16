@@ -7,7 +7,7 @@ from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
 import tensorflow as tf
-from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, integration_test
+from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 
 prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'])
 
@@ -19,7 +19,7 @@ def load_model():
     return cnn
 
 
-@integration_test()
+@tensorleap_integration_test()
 def check_custom_test_mapping(idx, subset):
     image = input_encoder(idx, subset)
     gt = gt_encoder(idx, subset)
