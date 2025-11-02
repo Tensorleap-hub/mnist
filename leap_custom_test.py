@@ -3,7 +3,7 @@ from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
 import tensorflow as tf
 import os
 import numpy as np
-from code_loader.helpers import visualize
+from code_loader.plot_functions.visualize import visualize
 
 
 def check_custom_test():
