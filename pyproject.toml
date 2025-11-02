@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8, <3.11"
-code-loader = "1.0.143.dev4"
+code-loader = "^1.0.145"
 tensorflow-io-gcs-filesystem = [{ version = "0.30.0", markers = "sys_platform != 'darwin'" },
                                 { version = "0.34.0", markers = "sys_platform == 'darwin'" }]
 tensorflow = { version = "2.11.0", markers = "sys_platform != 'darwin'" }
