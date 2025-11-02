@@ -9,3 +9,4 @@ py-readability-metrics==1.4.5
 transformers==4.46.3
 spacy==2.3.9
 tensorflow==2.12.0
+code-loader==1.0.143.dev4
