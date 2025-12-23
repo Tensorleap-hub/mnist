@@ -52,7 +52,7 @@ def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str
     digit_int = int(digit)
 
     res = {
-        'label': metadata_label(digit_int),
+        'label': str(metadata_label(digit_int)),
         'even_odd': metadata_even_odd(digit_int),
         'circle': metadata_circle(digit_int)
     }
