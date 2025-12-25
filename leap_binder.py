@@ -72,11 +72,13 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
 
 @tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
 def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
+    raise Exception("THIS IS BIG ERROR")
     return LeapHorizontalBar(np.squeeze(data), gt=np.squeeze(gt), labels=CONFIG['LABELS'])
 
 
 @tensorleap_custom_metric('metrics')
 def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
+    raise Exception("THIS IS BIG ERROR")
     prob = output_pred.max(axis=-1)
     pred_idx = output_pred.argmax(axis=-1)
     metrics_dict = {'prob': prob,
@@ -91,6 +93,7 @@ def categorical_crossentropy_loss(ground_truth: np.array, prediction: np.array) 
 
 @tensorleap_custom_visualizer('default_image_visualizer', LeapDataType.Image)
 def image_visualizer(data: np.float32):
+    raise Exception("THIS IS BIG ERROR")
     return default_image_visualizer(data)
 
 
