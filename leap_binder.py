@@ -15,8 +15,8 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
     # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y})
-    val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y})
+    train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y},state=DataStateType.training)
+    val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y},state=DataStateType.validation)
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
@@ -24,7 +24,7 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
-@tensorleap_input_encoder('image')
+@tensorleap_input_encoder('image',channel_dim=-1)
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
     return preprocess.data['images'][idx].astype('float32')
 
@@ -75,7 +75,7 @@ def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
     return LeapHorizontalBar(np.squeeze(data), gt=np.squeeze(gt), labels=CONFIG['LABELS'])
 
 
-@tensorleap_custom_metric('metrics')
+@tensorleap_custom_metric('metrics',direction=MetricDirection.Downward)
 def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
     prob = output_pred.max(axis=-1)
     pred_idx = output_pred.argmax(axis=-1)
