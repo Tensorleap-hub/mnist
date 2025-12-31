@@ -9,7 +9,7 @@ from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 
-prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'],channel_dim=-1)
+prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'], channel_dim=-1)
 
 @tensorleap_load_model([prediction_type1])
 def load_model():
