@@ -25,7 +25,7 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
-@tensorleap_input_encoder('image', channel_dim = -1)
+@tensorleap_input_encoder('image', channel_dim=-1)
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
     return preprocess.data['images'][idx].astype('float32')
 
