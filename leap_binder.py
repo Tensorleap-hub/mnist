@@ -5,7 +5,7 @@ from mnist.data.preprocess import preprocess_func
 from mnist.utils import *
 from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
-from code_loader.contract.datasetclasses import DatasetMetadataType
+from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirection
 from numpy.typing import NDArray
 
 
