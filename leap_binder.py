@@ -15,10 +15,12 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
     # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y})
-    val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y})
+    train = PreprocessResponse(length=int(len(train_X)/100), data={'images': train_X, 'labels': train_Y}, state=DataStateType.training)
+    val = PreprocessResponse(length=int(len(val_X)/100), data={'images': val_X, 'labels': val_Y}, state=DataStateType.validation)
+    additional_labeled = PreprocessResponse(length=int(len(val_X)/100), data={'images': val_X, 'labels': val_Y}, state=DataStateType.additional_labeled)
+
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
-    response = [train, val]
+    response = [train, val, additional_labeled]
     return response
 
 
