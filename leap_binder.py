@@ -7,6 +7,8 @@ from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
 from numpy.typing import NDArray
 
+with open(CONFIG['moshe_folder_path'], "r", encoding="utf-8") as f:
+     print(f.read())
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:

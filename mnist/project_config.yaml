@@ -11,3 +11,4 @@ LABELS:
   - "9"
 
 local_file_path: "mnist"
+moshe_folder_path: "/Users/tomkoren/tensorleap/data/moshe/temp_file.txt"
