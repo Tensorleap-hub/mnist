@@ -3,7 +3,7 @@ from code_loader.contract.datasetclasses import PredictionTypeHandler
 from code_loader.plot_functions.visualize import visualize
 
 from mnist.config import CONFIG
-from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
+from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder, preprocess_unlabeled_func_leap,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
 import tensorflow as tf

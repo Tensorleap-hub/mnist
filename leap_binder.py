@@ -11,17 +11,30 @@ from numpy.typing import NDArray
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+    train_X[200:300] = train_X[:100]
+    train_Y[200:300] = train_Y[:100]
+    val_X[1200:1300] = val_X[1000:1100]
+    val_Y[1200:1300] = val_Y[1000:1100]
 
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
     # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(length=int(len(train_X)/100), data={'images': train_X, 'labels': train_Y}, state=DataStateType.training)
-    val = PreprocessResponse(length=int(len(val_X)/100), data={'images': val_X, 'labels': val_Y}, state=DataStateType.validation)
-    additional_labeled = PreprocessResponse(length=int(len(val_X)/100), data={'images': val_X, 'labels': val_Y}, state=DataStateType.additional_labeled)
+    train = PreprocessResponse(sample_ids=list(range(500)), sample_id_type=int, data={'images': train_X, 'labels': train_Y}, state=DataStateType.training)
+    val = PreprocessResponse(sample_ids=list(range(200)), sample_id_type=int, data={'images': val_X, 'labels': val_Y}, state=DataStateType.validation)
+    test = PreprocessResponse(sample_ids=list(range(200)), sample_id_type=int, data={'images': val_X, 'labels': val_Y}, state=DataStateType.test)
+    additional_labeled = PreprocessResponse(sample_ids=list(range(1000, 1800)), sample_id_type=int, data={'images': val_X, 'labels': val_Y}, state=DataStateType.additional_labeled)
 
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
-    response = [train, val, additional_labeled]
+    response = [train, val, test, additional_labeled]
     return response
+
+@tensorleap_unlabeled_preprocess()
+def preprocess_unlabeled_func_leap() -> List[PreprocessResponse]:
+    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+
+    unlabeled = PreprocessResponse(sample_ids=list(range(800, 1000)), sample_id_type=int,
+                              data={'images': val_X, 'labels': val_Y}, state=DataStateType.unlabeled)
+    return unlabeled
 
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
