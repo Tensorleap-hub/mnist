@@ -35,8 +35,8 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
     # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(sample_ids=[str(i) for i in range(int(len(train_X)/100))], data={'images': train_X, 'labels': train_Y})
-    val = PreprocessResponse(sample_ids=[str(i) for i in range(int(len(val_X)/100))], data={'images': val_X, 'labels': val_Y})
+    train = PreprocessResponse(sample_ids=[str(i) for i in range(int(len(train_X)/1000))], data={'images': train_X, 'labels': train_Y})
+    val = PreprocessResponse(sample_ids=[str(i) for i in range(int(len(val_X)/1000))], data={'images': val_X, 'labels': val_Y})
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
