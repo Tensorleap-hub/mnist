@@ -164,13 +164,13 @@ files = [
 
 [[package]]
 name = "code-loader"
-version = "1.0.153.dev4"
+version = "1.0.157.dev0"
 description = ""
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "code_loader-1.0.153.dev4-py3-none-any.whl", hash = "sha256:bfb709f3d4c61c018d692afeb611cf65644597277a20f60f671630009177307b"},
-    {file = "code_loader-1.0.153.dev4.tar.gz", hash = "sha256:542e2df8ebe840e12d764eb8dffa12d32df3f89c1ca4807ef3a767b1967c5ff2"},
+    {file = "code_loader-1.0.157.dev0-py3-none-any.whl", hash = "sha256:5ea1c7862b2cc8985b435f37a6a99de08bea4d1fef2e8df75ebb035c484396dd"},
+    {file = "code_loader-1.0.157.dev0.tar.gz", hash = "sha256:e542f09fd82ee64c7206aefeaefde1192b4bcea2f6976b548ecdfaecffa0cfd4"},
 ]
 
 [package.dependencies]
@@ -1987,4 +1987,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "3a66542985cb3e012bbc3a399bb4b58dec683136486f2814305c553c65db9cbc"
+content-hash = "732abb4a404285fa17989f2b43f187f342a47cecbc0e947e310a633051a191d4"
