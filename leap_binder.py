@@ -19,7 +19,7 @@ def instance_mask_encoder(idx: str, preprocess: PreprocessResponse, instance_idx
     x, y, w, h = round(x * img_width), round(y * img_height), round(w * img_width), round(h * img_height)
     mask[:, y:y+h, x:x+w] = 1
 
-    extra_metadata = {"instance_size": np.sum(mask)}
+    extra_metadata = {"instance_size": np.sum(mask), "namee": "nir"}
     element_instances = ElementInstance(f"{label_id}", mask, extra_metadata)
 
     return element_instances
