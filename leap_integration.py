@@ -5,7 +5,8 @@ from code_loader.plot_functions.visualize import visualize
 from mnist.config import CONFIG
 from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
-                         metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
+                         metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid,
+                         instance_mask_encoder)
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 
@@ -29,11 +30,13 @@ def check_custom_test_mapping(idx, subset):
     both_vis = combined_bar(y_pred, gt)
     img_vis = image_visualizer(image)
 
-    visualize(img_vis)
+    # visualize(img_vis)
 
     metric_result = metrics(y_pred)
 
     loss_ret = categorical_crossentropy_loss(gt, y_pred)
+
+    # test = instance_mask_encoder(str(0), subset, 0)
 
     m1 = metadata_sample_index(idx, subset)
     print(m1)

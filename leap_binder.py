@@ -7,6 +7,13 @@ from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
 from numpy.typing import NDArray
 
+# Input encoder fetches the image with the index `idx` from the `images` array set in
+# the PreprocessResponse data. Returns a numpy array containing the sample's image.
+@tensorleap_input_encoder('image')
+def input_encoder(idx: str, preprocess: PreprocessResponse) -> np.ndarray:
+    return preprocess.data['images'][int(idx)].astype('float32')
+
+
 @tensorleap_instances_masks_encoder('image')
 def instance_mask_encoder(idx: str, preprocess: PreprocessResponse, instance_idx) -> ElementInstance:
     inp = input_encoder(idx, preprocess)
@@ -19,7 +26,7 @@ def instance_mask_encoder(idx: str, preprocess: PreprocessResponse, instance_idx
     x, y, w, h = round(x * img_width), round(y * img_height), round(w * img_width), round(h * img_height)
     mask[:, y:y+h, x:x+w] = 1
 
-    extra_metadata = {"instance_size": np.sum(mask), "namee": "nir"}
+    extra_metadata = {"instance_size": int(np.sum(mask)), "namee": f"aa_{idx}"}
     element_instances = ElementInstance(f"{label_id}", mask, extra_metadata)
 
     return element_instances
@@ -42,11 +49,6 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     return response
 
 
-# Input encoder fetches the image with the index `idx` from the `images` array set in
-# the PreprocessResponse data. Returns a numpy array containing the sample's image.
-@tensorleap_input_encoder('image')
-def input_encoder(idx: str, preprocess: PreprocessResponse) -> np.ndarray:
-    return preprocess.data['images'][int(idx)].astype('float32')
 
 
 # Ground truth encoder fetches the label with the index `idx` from the `labels` array set in
