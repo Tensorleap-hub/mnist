@@ -36,7 +36,8 @@ def check_custom_test_mapping(idx, subset):
 
     loss_ret = categorical_crossentropy_loss(gt, y_pred)
 
-    # test = instance_mask_encoder(str(0), subset, 0)
+    test = instance_mask_encoder(str(0), subset, 1)
+    test = instance_mask_encoder(str(0), subset, 1)
 
     m1 = metadata_sample_index(idx, subset)
     print(m1)

@@ -17,17 +17,17 @@ def input_encoder(idx: str, preprocess: PreprocessResponse) -> np.ndarray:
 @tensorleap_instances_masks_encoder('image')
 def instance_mask_encoder(idx: str, preprocess: PreprocessResponse, instance_idx) -> ElementInstance:
     inp = input_encoder(idx, preprocess)
-    gt = [(0, 0, 5, 5, 0), (7, 7, 16, 16, 1)]
+    gt = [(0, 0, 16, 16, 0), (7, 7, 13, 13, 1)]
     label = gt[instance_idx]
 
     mask = np.zeros_like(inp)
     x, y, w, h, label_id = label
-    img_width, img_height = mask.shape[1], mask.shape[2]
-    x, y, w, h = round(x * img_width), round(y * img_height), round(w * img_width), round(h * img_height)
-    mask[:, y:y+h, x:x+w] = 1
+    # img_width, img_height = mask.shape[1], mask.shape[2]
+    # x, y, w, h = round(x * img_width), round(y * img_height), round(w * img_width), round(h * img_height)
+    mask[y:y+h, x:x+w, :] = 1
 
-    extra_metadata = {"instance_size": int(np.sum(mask)), "namee": f"aa_{idx}"}
-    element_instances = ElementInstance(f"{label_id}", mask, extra_metadata)
+    extra_metadata = {"instance_size": int(np.sum(mask)), "namee": f"aa_{instance_idx}"}
+    element_instances = ElementInstance(f"{label_id}", mask)
 
     return element_instances
 
