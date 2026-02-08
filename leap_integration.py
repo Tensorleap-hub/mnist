@@ -9,7 +9,7 @@ from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 
-prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'])
+prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'], channel_dim=-1)
 
 @tensorleap_load_model([prediction_type1])
 def load_model():
@@ -36,7 +36,6 @@ def check_custom_test_mapping(idx, subset):
     loss_ret = categorical_crossentropy_loss(gt, y_pred)
 
     m1 = metadata_sample_index(idx, subset)
-    print(m1)
     m2 = metadata_one_hot_digit(idx, subset)
     m3 = metadata_euclidean_distance_from_class_centroid(idx, subset)
 
