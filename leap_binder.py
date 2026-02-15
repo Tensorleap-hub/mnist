@@ -11,14 +11,17 @@ from numpy.typing import NDArray
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
-    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
-    print(train_X.shape, val_X.shape, train_Y.shape, val_Y.shape)
+    result = preprocess_func(CONFIG['local_file_path'])
+    if len(result) == 5:
+        train_X, val_X, train_Y, val_Y, classes_avg_images = result
+        leap_binder.cache_container["classes_avg_images"] = classes_avg_images
+    else:
+        train_X, val_X, train_Y, val_Y = result
+        leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
+    print(len(train_X), val_X.shape if hasattr(val_X, 'shape') else len(val_X), len(train_Y), val_Y.shape if hasattr(val_Y, 'shape') else len(val_Y))
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
-    # The length of each data slice is provided, along with the data dictionary.
-    # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
     train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y}, state=DataStateType.training)
     val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y}, state=DataStateType.validation)
-    leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
 
