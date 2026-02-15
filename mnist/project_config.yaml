@@ -10,4 +10,6 @@ LABELS:
   - "8"
   - "9"
 
-local_file_path: "mnist"
+# "mnist" = original 70k; "mnist_50m" = sharded 50M at <data_root>/mnist_50m
+# EC2: data_root = /home/ssm-user/tensorleap/data (inferred from project path)
+local_file_path: "mnist_50m"

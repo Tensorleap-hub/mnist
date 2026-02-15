@@ -13,22 +13,47 @@ except ImportError:
     load_manifest = None
 
 
+def _get_data_root():
+    """Resolve the data root: env TENSORLEAP_DATA_ROOT, or infer from project path (EC2)."""
+    if os.environ.get('TENSORLEAP_DATA_ROOT'):
+        return os.path.abspath(os.environ['TENSORLEAP_DATA_ROOT'])
+    # Project at /home/ssm-user/tensorleap/projects/mnist -> data at /home/ssm-user/tensorleap/data
+    try:
+        # preprocess.py is at .../projects/mnist/mnist/data/preprocess.py
+        this_file = os.path.abspath(__file__)
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(this_file)))  # .../projects/mnist
+        parent = os.path.dirname(project_root)  # .../projects
+        if os.path.basename(parent) == 'projects':
+            return os.path.join(os.path.dirname(parent), 'data')  # .../tensorleap/data
+    except Exception:
+        pass
+    return None
+
+
 def get_full_path(path):
     if path is None:
         path = CONFIG['local_file_path']
+    path = path.strip() if isinstance(path, str) else path
     if os.path.isabs(path):
         return path.rstrip(os.sep)
-    elif 'IS_CLOUD' in os.environ and os.path.exists("/nfs"):  # SaaS env
-        return os.path.join("/nfs", path)
-    elif 'GENERIC_HOST_PATH' in os.environ:  # OnPrem
-        return os.path.join(os.environ['GENERIC_HOST_PATH'], path)
-    else:
-        # e.g. "mnist_50m" -> ~/tensorleap/data/mnist_50m
-        # e.g. "tensorleap/data/mnist_50m" -> ~/tensorleap/data/mnist_50m
+    # Explicit data root (EC2: /home/ssm-user/tensorleap/data)
+    data_root = _get_data_root()
+    if data_root and os.path.isdir(data_root):
         path = path.rstrip(os.sep)
-        if path.startswith('tensorleap/data') or path.startswith('tensorleap' + os.sep + 'data'):
-            return os.path.join(os.path.expanduser('~'), path)
-        return os.path.join(os.path.expanduser('~'), 'tensorleap', 'data', path)
+        if path in ("", "."):
+            return data_root
+        return os.path.join(data_root, path)
+    if 'IS_CLOUD' in os.environ and os.path.exists("/nfs"):  # SaaS env (e.g. EC2)
+        if path in ("", "."):
+            return "/nfs"
+        return os.path.join("/nfs", path.rstrip(os.sep))
+    if 'GENERIC_HOST_PATH' in os.environ:  # OnPrem
+        return os.path.join(os.environ['GENERIC_HOST_PATH'], path)
+    # Default: ~/tensorleap/data/<path>
+    path = path.rstrip(os.sep)
+    if path.startswith('tensorleap/data') or path.startswith('tensorleap' + os.sep + 'data'):
+        return os.path.join(os.path.expanduser('~'), path)
+    return os.path.join(os.path.expanduser('~'), 'tensorleap', 'data', path)
 
 
 def _is_sharded_dataset(dir_path: str) -> bool:
