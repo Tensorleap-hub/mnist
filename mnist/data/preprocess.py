@@ -7,13 +7,22 @@ import os
 
 from mnist.config import CONFIG
 
-try:
-    from mnist.data.make_50m_dataset import load_manifest
-except ImportError:
-    load_manifest = None
-
 # EC2: data shards at this path when project is at .../tensorleap/projects/mnist
 EC2_MNIST_50M_PATH = "/home/ssm-user/tensorleap/data/mnist_50m"
+
+
+def _load_manifest(output_dir: str) -> dict:
+    """Load manifest.txt from a 50M sharded dataset (no dependency on make_50m_dataset)."""
+    path = os.path.join(output_dir, "manifest.txt")
+    out = {}
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            out[k] = int(v) if v.isdigit() else v
+    return out
 
 
 def _get_data_root():
@@ -87,7 +96,7 @@ class _ShardLoader:
 
     def __init__(self, dir_path: str):
         self.dir_path = dir_path
-        self.manifest = load_manifest(dir_path) if load_manifest else {}
+        self.manifest = _load_manifest(dir_path)
         self._num_samples = int(self.manifest.get('num_samples', 0))
         self._shard_size = int(self.manifest.get('shard_size', 0))
         self._num_shards = int(self.manifest.get('num_shards', 0))
@@ -176,12 +185,12 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
         os.makedirs(local_file_path)
 
     # If we wanted mnist_50m but resolved path isn't sharded, try known EC2 path
-    if requested == "mnist_50m" and (not load_manifest or not _is_sharded_dataset(local_file_path)):
-        if os.path.isdir(EC2_MNIST_50M_PATH) and load_manifest and _is_sharded_dataset(EC2_MNIST_50M_PATH):
+    if requested == "mnist_50m" and not _is_sharded_dataset(local_file_path):
+        if os.path.isdir(EC2_MNIST_50M_PATH) and _is_sharded_dataset(EC2_MNIST_50M_PATH):
             local_file_path = EC2_MNIST_50M_PATH
 
     # Sharded dataset (multiple shard_*.npz + manifest.txt)
-    if load_manifest and _is_sharded_dataset(local_file_path):
+    if _is_sharded_dataset(local_file_path):
         loader = _ShardLoader(local_file_path)
         train_X = _LazyShardedImages(loader)
         train_Y = _LazyShardedLabels(loader)
