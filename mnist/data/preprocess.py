@@ -12,6 +12,9 @@ try:
 except ImportError:
     load_manifest = None
 
+# EC2: data shards at this path when project is at .../tensorleap/projects/mnist
+EC2_MNIST_50M_PATH = "/home/ssm-user/tensorleap/data/mnist_50m"
+
 
 def _get_data_root():
     """Resolve the data root: env TENSORLEAP_DATA_ROOT, or infer from project path (EC2)."""
@@ -34,26 +37,35 @@ def get_full_path(path):
     if path is None:
         path = CONFIG['local_file_path']
     path = path.strip() if isinstance(path, str) else path
+    path = path.rstrip(os.sep) if path else path
+
+    # Explicit override for 50M dataset (set on EC2 if needed)
+    if path == "mnist_50m" and os.environ.get("TENSORLEAP_MNIST_50M_PATH"):
+        p = os.environ["TENSORLEAP_MNIST_50M_PATH"].strip().rstrip(os.sep)
+        if p:
+            return p
+
     if os.path.isabs(path):
-        return path.rstrip(os.sep)
-    # Explicit data root (EC2: /home/ssm-user/tensorleap/data)
-    data_root = _get_data_root()
-    if data_root and os.path.isdir(data_root):
-        path = path.rstrip(os.sep)
-        if path in ("", "."):
-            return data_root
-        return os.path.join(data_root, path)
-    if 'IS_CLOUD' in os.environ and os.path.exists("/nfs"):  # SaaS env (e.g. EC2)
-        if path in ("", "."):
-            return "/nfs"
-        return os.path.join("/nfs", path.rstrip(os.sep))
-    if 'GENERIC_HOST_PATH' in os.environ:  # OnPrem
-        return os.path.join(os.environ['GENERIC_HOST_PATH'], path)
-    # Default: ~/tensorleap/data/<path>
-    path = path.rstrip(os.sep)
-    if path.startswith('tensorleap/data') or path.startswith('tensorleap' + os.sep + 'data'):
-        return os.path.join(os.path.expanduser('~'), path)
-    return os.path.join(os.path.expanduser('~'), 'tensorleap', 'data', path)
+        resolved = path
+    else:
+        # Explicit data root (EC2: /home/ssm-user/tensorleap/data)
+        data_root = _get_data_root()
+        if data_root and os.path.isdir(data_root):
+            resolved = data_root if path in ("", ".") else os.path.join(data_root, path)
+        elif 'IS_CLOUD' in os.environ and os.path.exists("/nfs"):
+            resolved = "/nfs" if path in ("", ".") else os.path.join("/nfs", path)
+        elif 'GENERIC_HOST_PATH' in os.environ:
+            resolved = os.path.join(os.environ['GENERIC_HOST_PATH'], path)
+        else:
+            if path.startswith('tensorleap/data') or path.startswith('tensorleap' + os.sep + 'data'):
+                resolved = os.path.join(os.path.expanduser('~'), path)
+            else:
+                resolved = os.path.join(os.path.expanduser('~'), 'tensorleap', 'data', path)
+
+    # EC2 fallback: if resolved path doesn't exist but 50M path does, use it
+    if path == "mnist_50m" and (not os.path.isdir(resolved)) and os.path.isdir(EC2_MNIST_50M_PATH):
+        return EC2_MNIST_50M_PATH
+    return resolved
 
 
 def _is_sharded_dataset(dir_path: str) -> bool:
@@ -158,9 +170,15 @@ def preprocess_func(local_file_path) -> Union[ndarray, Iterable, int, float, tup
     # Resolve path
     if local_file_path is None:
         local_file_path = CONFIG['local_file_path']
+    requested = (local_file_path or "").strip().rstrip(os.sep)
     local_file_path = get_full_path(local_file_path)
     if not os.path.exists(local_file_path):
         os.makedirs(local_file_path)
+
+    # If we wanted mnist_50m but resolved path isn't sharded, try known EC2 path
+    if requested == "mnist_50m" and (not load_manifest or not _is_sharded_dataset(local_file_path)):
+        if os.path.isdir(EC2_MNIST_50M_PATH) and load_manifest and _is_sharded_dataset(EC2_MNIST_50M_PATH):
+            local_file_path = EC2_MNIST_50M_PATH
 
     # Sharded dataset (multiple shard_*.npz + manifest.txt)
     if load_manifest and _is_sharded_dataset(local_file_path):
