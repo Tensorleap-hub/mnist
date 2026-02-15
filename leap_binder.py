@@ -12,7 +12,7 @@ from numpy.typing import NDArray
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
-
+    print(train_X.shape, val_X.shape, train_Y.shape, val_Y.shape)
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
     # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
