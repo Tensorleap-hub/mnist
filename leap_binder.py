@@ -16,8 +16,8 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
     # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y}, state=DataStateType.training)
-    val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y}, state=DataStateType.validation)
+    train = PreprocessResponse(length=50_000_000, data={'images': train_X, 'labels': train_Y, 'num_samples': len(train_X)}, state=DataStateType.training)
+    val = PreprocessResponse(length=50_000_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
@@ -27,14 +27,14 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
 @tensorleap_input_encoder('image', channel_dim=-1)
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    return preprocess.data['images'][idx].astype('float32')
+    return preprocess.data['images'][idx % preprocess.data['num_samples']].astype('float32')
 
 
 # Ground truth encoder fetches the label with the index `idx` from the `labels` array set in
 # the PreprocessResponse's data. Returns a numpy array containing a hot vector label correlated with the sample.
 @tensorleap_gt_encoder('classes')
 def gt_encoder(idx: int, preprocessing: PreprocessResponse) -> np.ndarray:
-    return preprocessing.data['labels'][idx].astype('float32')
+    return preprocessing.data['labels'][idx % preprocessing.data['num_samples']].astype('float32')
 
 
 # Metadata functions allow to add extra data for a later use in analysis.
@@ -48,7 +48,7 @@ def metadata_sample_index(idx: int, preprocess: PreprocessResponse) -> int:
 # This metadata adds the int digit of each sample (not a hot vector).
 @tensorleap_metadata('metadata_one_hot_digit')
 def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str, Union[str, int]]:
-    one_hot_digit = gt_encoder(idx, preprocess)
+    one_hot_digit = gt_encoder(idx % preprocess.data['num_samples'], preprocess)
     digit = one_hot_digit.argmax()
     digit_int = int(digit)
 
@@ -64,8 +64,8 @@ def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str
 def metadata_euclidean_distance_from_class_centroid(idx: int,
                                                     preprocess: Union[PreprocessResponse, list]) -> np.ndarray:
     ### calculate euclidean distance from the average image of the specific class
-    sample_input = preprocess.data['images'][idx]
-    label = preprocess.data['labels'][idx]
+    sample_input = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    label = preprocess.data['labels'][idx % preprocess.data['num_samples']]
     label = str(np.argmax(label))
     class_average_image = leap_binder.cache_container["classes_avg_images"][label]
     return np.linalg.norm(class_average_image - sample_input)
