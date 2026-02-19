@@ -8,6 +8,8 @@ from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
+from leap_binder import leap_binder as lb
+lb.leap_analysis_configuration.domain_gap_metadata = ['metadata_one_hot_digit_label']
 
 prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'], channel_dim=-1)
 
@@ -44,6 +46,7 @@ def check_custom_test_mapping(idx, subset):
 
 if __name__ == '__main__':
     check_custom_test_mapping(0, preprocess_func_leap()[0])
+
 
 
 

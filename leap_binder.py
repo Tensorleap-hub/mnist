@@ -1,3 +1,4 @@
+from code_loader.contract.visualizer_classes import LeapVideo
 from code_loader.default_metrics import categorical_crossentropy
 from code_loader.visualizers.default_visualizers import default_image_visualizer
 
@@ -7,7 +8,6 @@ from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
 from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirection
 from numpy.typing import NDArray
-
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
@@ -27,7 +27,7 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
 @tensorleap_input_encoder('image', channel_dim=-1)
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    return preprocess.data['images'][idx].astype('float32')
+    return preprocess.data['images'][idx].astype(np.float32)
 
 
 # Ground truth encoder fetches the label with the index `idx` from the `labels` array set in
@@ -94,7 +94,19 @@ def categorical_crossentropy_loss(ground_truth: np.array, prediction: np.array) 
 def image_visualizer(data: np.float32):
     return default_image_visualizer(data)
 
+@tensorleap_custom_visualizer('video', LeapDataType.Video)
+def image_visualizer(data: np.float32):
+    T = 30
+    sigma = 0.05  # noise strength (tweak)
 
+    video = np.repeat(data, T, axis=0)  # (30, 28, 28, 1)
+
+    noise = np.random.normal(loc=0.0, scale=sigma, size=video.shape).astype(video.dtype)
+    video_noisy = video + noise
+
+    # If your data is image-like in [0,1], clip back:
+    video_noisy_clipped = np.clip(video_noisy, 0.0, 1.0)
+    return LeapVideo(video_noisy_clipped)
 
 
 if __name__ == '__main__':
