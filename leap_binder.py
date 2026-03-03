@@ -7,6 +7,7 @@ from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
 from numpy.typing import NDArray
 
+leap_binder.leap_analysis_configuration.feature_flags = ['FEATURE_FLAG_MISLABELED_ON_ALL_CATEGORICAL_METADATA']
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
