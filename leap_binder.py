@@ -9,6 +9,15 @@ from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirec
 from numpy.typing import NDArray
 
 
+@tensorleap_unlabeled_preprocess()
+def unlabeled_preprocess_func_leap() -> PreprocessResponse:
+    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+
+    val = PreprocessResponse(length=10_000_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
+    leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
+    return val
+
+
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])

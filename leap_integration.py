@@ -8,7 +8,7 @@ from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
-
+from leap_binder import unlabeled_preprocess_func_leap
 prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'], channel_dim=-1)
 
 @tensorleap_load_model([prediction_type1])
