@@ -13,7 +13,7 @@ from numpy.typing import NDArray
 def unlabeled_preprocess_func_leap() -> PreprocessResponse:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
 
-    val = PreprocessResponse(length=10_000_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
+    val = PreprocessResponse(length=100_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     return val
 
@@ -22,11 +22,8 @@ def unlabeled_preprocess_func_leap() -> PreprocessResponse:
 def preprocess_func_leap() -> List[PreprocessResponse]:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
 
-    # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
-    # The length of each data slice is provided, along with the data dictionary.
-    # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(length=40_000_000, data={'images': train_X, 'labels': train_Y, 'num_samples': len(train_X)}, state=DataStateType.training)
-    val = PreprocessResponse(length=10_000_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
+    train = PreprocessResponse(length=800_000, data={'images': train_X, 'labels': train_Y, 'num_samples': len(train_X)}, state=DataStateType.training)
+    val = PreprocessResponse(length=150_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
