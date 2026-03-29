@@ -82,7 +82,6 @@ def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[s
     pred_idx = output_pred.argmax(axis=-1)
     synthetic_population_failure = prob.copy()
     gt_idx = ground_truth.argmax(axis=-1)
-
     # Force a clearly failing cohort only for samples with ground-truth digit 5.
     # Since the metric direction is upward, these samples will always look bad.
     gt_five_mask = gt_idx == 5
