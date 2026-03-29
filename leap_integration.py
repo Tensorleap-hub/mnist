@@ -31,7 +31,7 @@ def check_custom_test_mapping(idx, subset):
 
     visualize(img_vis)
 
-    metric_result = metrics(y_pred)
+    metric_result = metrics(gt, y_pred)
 
     loss_ret = categorical_crossentropy_loss(gt, y_pred)
 
@@ -44,7 +44,6 @@ def check_custom_test_mapping(idx, subset):
 
 if __name__ == '__main__':
     check_custom_test_mapping(0, preprocess_func_leap()[0])
-
 
 
 

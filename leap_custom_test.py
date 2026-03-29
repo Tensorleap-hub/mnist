@@ -43,7 +43,7 @@ def check_custom_test():
                 visualize(img_vis)
 
             # print metrics
-            metric_result = metrics(y_pred.numpy())
+            metric_result = metrics(batch_gt, y_pred.numpy())
             print(metric_result)
 
             # print metadata
