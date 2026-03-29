@@ -82,8 +82,7 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
     prob = output_pred.max(axis=-1)
     pred_idx = output_pred.argmax(axis=-1)
     metrics_dict = {'prob': prob,
-                    'prd_idx': pred_idx,
-                    'prd_idx_int': int(pred_idx)}
+                    'prd_idx': pred_idx}
     return metrics_dict
 
 
