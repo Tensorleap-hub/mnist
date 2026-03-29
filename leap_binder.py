@@ -81,7 +81,7 @@ def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
     direction={
         'synthetic_population_failure': MetricDirection.Upward,
         'guaranteed_population_failure': MetricDirection.Upward,
-        'categorical_crossentropy_metric': MetricDirection.Upward,
+        'categorical_crossentropy_metric': MetricDirection.Downward,
     },
 )
 def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
