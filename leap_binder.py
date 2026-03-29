@@ -88,10 +88,7 @@ def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[s
     gt_five_mask = gt_idx == 5
     synthetic_population_failure[gt_five_mask] = synthetic_population_failure[gt_five_mask] - 1.5
     aa=categorical_crossentropy(ground_truth, output_pred)*2
-    metrics_dict = {'prob': prob,
-                    'prd_idx': pred_idx,
-                    'synthetic_population_failure': aa,
-                    'synthetic_population_failure2': synthetic_population_failure}
+    metrics_dict = {'synthetic_population_failure': aa}
 
     return metrics_dict
 
