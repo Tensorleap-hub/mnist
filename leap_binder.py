@@ -79,9 +79,9 @@ def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
 @tensorleap_custom_metric(
     'metrics',
     direction={
-        'synthetic_population_failure': MetricDirection.Upward,
-        'guaranteed_population_failure': MetricDirection.Upward,
-        'categorical_crossentropy_metric': MetricDirection.Upward,
+        'synthetic_population_failure': MetricDirection.Upward, # upper=better
+        'guaranteed_population_failure': MetricDirection.Upward, # lower = better
+        'categorical_crossentropy_metric': MetricDirection.Upward, # lowe = better
     },
 )
 def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
