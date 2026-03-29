@@ -76,18 +76,28 @@ def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
     return LeapHorizontalBar(np.squeeze(data), gt=np.squeeze(gt), labels=CONFIG['LABELS'])
 
 
-@tensorleap_custom_metric('metrics',direction={'synthetic_population_failure':MetricDirection.Downward})
+@tensorleap_custom_metric(
+    'metrics',
+    direction={
+        'synthetic_population_failure': MetricDirection.Upward,
+        'categorical_crossentropy_loss': MetricDirection.Upward,
+    },
+)
 def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
     prob = output_pred.max(axis=-1)
     pred_idx = output_pred.argmax(axis=-1)
     synthetic_population_failure = prob.copy()
     gt_idx = ground_truth.argmax(axis=-1)
+    loss_value = categorical_crossentropy(ground_truth, output_pred)
 
     # Force a clearly failing cohort only for samples with ground-truth digit 5.
     # Since the metric direction is upward, these samples will always look bad.
     gt_five_mask = gt_idx == 5
     synthetic_population_failure[gt_five_mask] = synthetic_population_failure[gt_five_mask] - 1.5
-    metrics_dict = {'synthetic_population_failure': synthetic_population_failure}
+    metrics_dict = {
+        'synthetic_population_failure': synthetic_population_failure,
+        'categorical_crossentropy_loss': loss_value,
+    }
 
     return metrics_dict
 
