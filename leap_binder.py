@@ -80,9 +80,7 @@ def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
     'metrics',
     direction={
         'synthetic_population_failure': MetricDirection.Upward,
-        'guaranteed_population_failure': MetricDirection.Upward,
-        'categorical_crossentropy_metric': MetricDirection.Upward,
-    },
+        'guaranteed_population_failure': MetricDirection.Upward    },
 )
 def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]]:
     prob = output_pred.max(axis=-1)
@@ -90,7 +88,6 @@ def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[s
     synthetic_population_failure = prob.copy()
     guaranteed_population_failure = np.zeros_like(prob)
     gt_idx = ground_truth.argmax(axis=-1)
-    loss_value = categorical_crossentropy(ground_truth, output_pred)
 
     # Force a clearly failing cohort only for samples with ground-truth digit 5.
     # Since the metric direction is upward, these samples will always look bad.
@@ -99,9 +96,7 @@ def metrics(ground_truth: NDArray[float], output_pred: NDArray[float]) -> Dict[s
     guaranteed_population_failure[gt_five_mask] = 100.0
     metrics_dict = {
         'synthetic_population_failure': synthetic_population_failure,
-        'guaranteed_population_failure': guaranteed_population_failure,
-        'categorical_crossentropy_metric': loss_value,
-    }
+        'guaranteed_population_failure': guaranteed_population_failure }
 
     return metrics_dict
 
