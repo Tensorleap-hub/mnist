@@ -1,12 +1,14 @@
 import os
-from code_loader.contract.datasetclasses import PredictionTypeHandler
+
+import numpy as np
+from code_loader.contract.datasetclasses import PredictionTypeHandler, SamplePreprocessResponse
 from code_loader.plot_functions.visualize import visualize
 
 from mnist.config import CONFIG
 from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid,
-                         instance_mask_encoder)
+                         instance_mask_encoder, image_visualizer_original)
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 
@@ -29,6 +31,9 @@ def check_custom_test_mapping(idx, subset):
     y_pred = cnn([image])
     both_vis = combined_bar(y_pred, gt)
     img_vis = image_visualizer(image)
+
+    s_prepro = SamplePreprocessResponse(np.array([idx]), subset)
+    img_vis_orig = image_visualizer_original(image, s_prepro)
 
     # visualize(img_vis)
 

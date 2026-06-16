@@ -116,6 +116,12 @@ def image_visualizer(data: np.float32):
     return default_image_visualizer(data)
 
 
+@tensorleap_custom_visualizer('image_visualizer_original', LeapDataType.Image)
+def image_visualizer_original(image: np.ndarray, sample_preprocess_response: SamplePreprocessResponse):
+    id = sample_preprocess_response.sample_ids[0]
+    sample_id = sample_preprocess_response.preprocess_response.instance_to_sample_ids_mappings[str(id)]
+    orig_image = input_encoder(sample_id, sample_preprocess_response.preprocess_response)
+    return default_image_visualizer(np.array([orig_image]))
 
 
 if __name__ == '__main__':
