@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from mnist.config import CONFIG
-from mnist.data.make_parquet import IMAGE_SHAPE, ensure_parquet, parquet_dir
+from mnist.data.make_parquet import IMAGE_SHAPE, ensure_parquet, parquet_dir, read_manifest
 
 logger = logging.getLogger("mnist.parquet")
 
@@ -35,10 +35,14 @@ def list_part_files(split: str) -> List[str]:
 
 
 def list_sample_ids(split: str) -> List[str]:
-    """Flat list of every sample id in the split, in file/row order."""
+    """Flat list of every sample id in the split, in file/row order.
+
+    Built from the row-count manifest so no Parquet file is opened here — real
+    per-sample reads (and their [parquet] LOAD instrumentation) happen only in the
+    encoders. The manifest's file order matches `list_part_files` (both sorted)."""
+    rows_per_file = read_manifest(split)["rows"]
     sample_ids: List[str] = []
-    for file_idx, path in enumerate(list_part_files(split)):
-        num_rows = _load_part(path).shape[0]
+    for file_idx, num_rows in enumerate(rows_per_file):
         sample_ids.extend(f"{file_idx}_{row}" for row in range(num_rows))
     return sample_ids
 
