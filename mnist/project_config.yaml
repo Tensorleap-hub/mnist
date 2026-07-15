@@ -11,3 +11,9 @@ LABELS:
   - "9"
 
 local_file_path: "mnist"
+
+# Parquet-backed storage (baseline example): mnist samples are written into many
+# small Parquet files, each file holding `samples_per_file` samples (one "group").
+parquet:
+  samples_per_file: 100
+  file_cache_size: 8   # LRU size for loaded Parquet files (in-memory)

@@ -15,6 +15,8 @@ code-loader-helpers = "^1.0.13"
 tensorflow-macos = { version = "2.11.0", markers = "sys_platform == 'darwin'" }
 torch = "1.12.1"
 matplotlib = "3.7.3"
+pandas = "^2.0.3"
+pyarrow = ">=14,<15"
 
 
 [tool.poetry.group.dev.dependencies]

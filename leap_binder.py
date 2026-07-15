@@ -1,53 +1,58 @@
 from code_loader.default_metrics import categorical_crossentropy
 from code_loader.visualizers.default_visualizers import default_image_visualizer
 
-from mnist.data.preprocess import preprocess_func
+from mnist.data.preprocess import (preprocess_func, read_sample_image, read_sample_label,
+                                    compute_class_centroids)
 from mnist.utils import *
 from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
+from keras.utils import to_categorical
 from numpy.typing import NDArray
 
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
-    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+    # Parquet-backed storage: each split is many small Parquet files. `preprocess_func`
+    # ensures the files exist and returns, per split, the flat list of string sample_ids
+    # ("{file_idx}_{row}") plus the ordered list of file paths (in `data`). The encoders
+    # resolve a sample_id -> (file, row) and read that single sample.
+    splits = preprocess_func(CONFIG['local_file_path'])
+    train_ids, train_data = splits['train']
+    val_ids, val_data = splits['val']
 
-    # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
-    # The length of each data slice is provided, along with the data dictionary.
-    # In this example we pass `images` and `labels` that later are encoded into the inputs and outputs
-    train = PreprocessResponse(length=len(train_X), data={'images': train_X, 'labels': train_Y})
-    val = PreprocessResponse(length=len(val_X), data={'images': val_X, 'labels': val_Y})
-    leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
+    train = PreprocessResponse(sample_ids=train_ids, data=train_data, sample_id_type=str)
+    val = PreprocessResponse(sample_ids=val_ids, data=val_data, sample_id_type=str)
+    leap_binder.cache_container["classes_avg_images"] = compute_class_centroids()
     response = [train, val]
     return response
 
 
-# Input encoder fetches the image with the index `idx` from the `images` array set in
-# the PreprocessResponse data. Returns a numpy array containing the sample's image.
+# Input encoder reads the image for `sample_id` from its Parquet file (LRU-cached).
+# Returns a (28, 28, 1) float32 image normalized to [0, 1].
 @tensorleap_input_encoder('image')
-def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    return preprocess.data['images'][idx].astype('float32')
+def input_encoder(sample_id: str, preprocess: PreprocessResponse) -> np.ndarray:
+    return read_sample_image(sample_id, preprocess)
 
 
-# Ground truth encoder fetches the label with the index `idx` from the `labels` array set in
-# the PreprocessResponse's data. Returns a numpy array containing a hot vector label correlated with the sample.
+# Ground truth encoder reads the label for `sample_id` and returns a one-hot float32 vector.
 @tensorleap_gt_encoder('classes')
-def gt_encoder(idx: int, preprocessing: PreprocessResponse) -> np.ndarray:
-    return preprocessing.data['labels'][idx].astype('float32')
+def gt_encoder(sample_id: str, preprocessing: PreprocessResponse) -> np.ndarray:
+    label = read_sample_label(sample_id, preprocessing)
+    return to_categorical(label, num_classes=len(CONFIG['LABELS'])).astype('float32')
 
 
 # Metadata functions allow to add extra data for a later use in analysis.
-# This metadata adds the int digit of each sample (not a hot vector).
+# This metadata records the sample's id.
 @tensorleap_metadata('metadata_sample_index')
-def metadata_sample_index(idx: int, preprocess: PreprocessResponse) -> int:
-    return idx
+def metadata_sample_index(sample_id: str, preprocess: PreprocessResponse) -> str:
+    return sample_id
 
 
 # Metadata functions allow to add extra data for a later use in analysis.
 # This metadata adds the int digit of each sample (not a hot vector).
 @tensorleap_metadata('metadata_one_hot_digit')
-def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str, Union[str, int]]:
-    one_hot_digit = gt_encoder(idx, preprocess)
+def metadata_one_hot_digit(sample_id: str, preprocess: PreprocessResponse) -> Dict[str, Union[str, int]]:
+    one_hot_digit = gt_encoder(sample_id, preprocess)
     digit = one_hot_digit.argmax()
     digit_int = int(digit)
 
@@ -60,12 +65,11 @@ def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str
 
 
 @tensorleap_metadata('euclidean_diff_from_class_centroid')
-def metadata_euclidean_distance_from_class_centroid(idx: int,
+def metadata_euclidean_distance_from_class_centroid(sample_id: str,
                                                     preprocess: Union[PreprocessResponse, list]) -> np.ndarray:
     ### calculate euclidean distance from the average image of the specific class
-    sample_input = preprocess.data['images'][idx]
-    label = preprocess.data['labels'][idx]
-    label = str(np.argmax(label))
+    sample_input = read_sample_image(sample_id, preprocess)
+    label = str(read_sample_label(sample_id, preprocess))
     class_average_image = leap_binder.cache_container["classes_avg_images"][label]
     return np.linalg.norm(class_average_image - sample_input)
 

@@ -1,5 +1,4 @@
-codeIntegrationId: 6906fdf1fcfae1a75a5fd1c9
-projectId: 6906fdeafcfae1a75a5fd1c2
+projectId: 69760182ca00d0f14ac1c7c1
 secretId: ""
 entryFile: leap_integration.py
 include:
@@ -10,4 +9,5 @@ include:
     - mnist/project_config.yaml
     - mnist/utils.py
     - mnist/data/preprocess.py
+    - mnist/data/make_parquet.py
 pythonVersion: py38

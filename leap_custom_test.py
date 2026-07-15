@@ -20,10 +20,10 @@ def check_custom_test():
 
     responses = preprocess_func_leap()
     for subset in responses:  # train, val
-        for idx in range(3):  # analyze first 3 images
+        for sample_id in subset.sample_ids[:3]:  # analyze first 3 images
             # get input and gt
-            image = input_encoder(idx, subset)
-            gt = gt_encoder(idx, subset)
+            image = input_encoder(sample_id, subset)
+            gt = gt_encoder(sample_id, subset)
 
             # add batch to input & gt
             concat = np.expand_dims(image, axis=0)
@@ -48,7 +48,7 @@ def check_custom_test():
 
             # print metadata
             for metadata_handler in leap_binder.setup_container.metadata:
-                curr_metadata = metadata_handler.function(idx, subset)
+                curr_metadata = metadata_handler.function(sample_id, subset)
                 print(f"Metadata {metadata_handler.name}: {curr_metadata}")
 
     print("finish tests")

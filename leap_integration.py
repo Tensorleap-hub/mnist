@@ -44,7 +44,8 @@ def check_custom_test_mapping(idx, subset):
 
 
 if __name__ == '__main__':
-    check_custom_test_mapping(0, preprocess_func_leap()[0])
+    train_subset = preprocess_func_leap()[0]
+    check_custom_test_mapping(train_subset.sample_ids[0], train_subset)
 
 
 
