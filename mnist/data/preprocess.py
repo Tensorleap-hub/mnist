@@ -8,7 +8,9 @@ Parquet files are loaded through an LRU cache: consecutive reads from the same f
 hit memory, while random cross-file access thrashes the cache. That thrash is the
 cost this baseline exists to expose (and that the batched-input refactor removes).
 """
+import logging
 import os
+import time
 from functools import lru_cache
 from typing import List, Tuple
 
@@ -18,7 +20,13 @@ import pandas as pd
 from mnist.config import CONFIG
 from mnist.data.make_parquet import IMAGE_SHAPE, ensure_parquet, parquet_dir
 
+logger = logging.getLogger("mnist.parquet")
+
 _CACHE_SIZE = int(CONFIG["parquet"]["file_cache_size"])
+# Counts physical Parquet reads (cache misses) over the process lifetime. Under
+# random cross-file sampling this climbs far above the number of files -> the reload
+# thrash the batched-input refactor is meant to remove.
+_load_stats = {"loads": 0, "seconds": 0.0}
 
 
 def list_part_files(split: str) -> List[str]:
@@ -37,8 +45,21 @@ def list_sample_ids(split: str) -> List[str]:
 
 @lru_cache(maxsize=_CACHE_SIZE)
 def _load_part(path: str) -> pd.DataFrame:
-    """Load one Parquet file into memory. Cached (LRU) across calls."""
-    return pd.read_parquet(path, engine="pyarrow")
+    """Load one Parquet file into memory. Cached (LRU) across calls.
+
+    Only cache misses reach this body, so each log line is one physical file read.
+    """
+    start = time.perf_counter()
+    df = pd.read_parquet(path, engine="pyarrow")
+    elapsed = time.perf_counter() - start
+    _load_stats["loads"] += 1
+    _load_stats["seconds"] += elapsed
+    msg = (f"[parquet] LOAD {os.path.basename(path)} rows={len(df)} "
+           f"took={elapsed * 1000:.1f}ms total_loads={_load_stats['loads']} "
+           f"total_load_time={_load_stats['seconds']:.2f}s cache_max={_CACHE_SIZE}")
+    logger.info(msg)
+    print(msg, flush=True)
+    return df
 
 
 def _resolve(sample_id: str, preprocess) -> Tuple[pd.DataFrame, int]:
