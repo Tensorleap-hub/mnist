@@ -17,3 +17,11 @@ local_file_path: "mnist"
 parquet:
   samples_per_file: 100
   file_cache_size: 8   # LRU size for loaded Parquet files (in-memory)
+
+# List-of-inputs ("grouped") toggle. When enabled, `preprocess_func_leap` cuts each
+# split's flat sample-id list into `num_groups` disjoint, near-equal groups and returns
+# nested sample_ids (List[List[sample_id]]). The encoders are group-aware either way.
+# Can be overridden at runtime via env vars MNIST_GROUPED=1 / MNIST_NUM_GROUPS=N.
+grouped:
+  enabled: false
+  num_groups: 4

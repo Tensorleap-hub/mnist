@@ -85,6 +85,28 @@ def read_sample_label(sample_id: str, preprocess) -> int:
     return int(df.iloc[row]["label"])
 
 
+def split_into_groups(sample_ids: List[str], num_groups: int) -> List[List[str]]:
+    """Cut a flat sample-id list into `num_groups` disjoint, near-equal groups.
+
+    Groups are contiguous slices of the flat list and never overlap. When the split
+    doesn't divide evenly, the first `n % num_groups` groups get one extra sample.
+    Used by the list-of-inputs ("grouped") path so each group is fetched/encoded as a
+    single (B, *) batch instead of one sample at a time.
+    """
+    n = len(sample_ids)
+    if num_groups < 1:
+        raise ValueError("num_groups must be >= 1")
+    num_groups = min(num_groups, n)  # never produce empty groups
+    base, remainder = divmod(n, num_groups)
+    groups: List[List[str]] = []
+    start = 0
+    for i in range(num_groups):
+        size = base + (1 if i < remainder else 0)
+        groups.append(sample_ids[start:start + size])
+        start += size
+    return groups
+
+
 def build_split_data(split: str) -> dict:
     """PreprocessResponse.data payload for a split."""
     return {"split": split, "file_paths": list_part_files(split)}
