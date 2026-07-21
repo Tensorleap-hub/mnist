@@ -23,5 +23,5 @@ parquet:
 # nested sample_ids (List[List[sample_id]]). The encoders are group-aware either way.
 # Can be overridden at runtime via env vars MNIST_GROUPED=1 / MNIST_NUM_GROUPS=N.
 grouped:
-  enabled: true
+  enabled: false
   num_groups: 4
