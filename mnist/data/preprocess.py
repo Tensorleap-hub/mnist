@@ -28,6 +28,12 @@ _CACHE_SIZE = int(CONFIG["parquet"]["file_cache_size"])
 # thrash the batched-input refactor is meant to remove.
 _load_stats = {"loads": 0, "seconds": 0.0}
 
+# Appends every LOAD line to a file on the shared hostPath mount (persistent across
+# worker-pod churn) instead of relying on capturing stdout from short-lived pods via
+# `kubectl logs`, which races pod deletion and can silently drop lines.
+_LOADLOG_DIR = "/Users/orram/data/_loadlog"
+_LOADLOG_PATH = os.path.join(_LOADLOG_DIR, "mnist.log")
+
 
 def list_part_files(split: str) -> List[str]:
     d = parquet_dir(split)
@@ -63,6 +69,9 @@ def _load_part(path: str) -> pd.DataFrame:
            f"total_load_time={_load_stats['seconds']:.2f}s cache_max={_CACHE_SIZE}")
     logger.info(msg)
     print(msg, flush=True)
+    os.makedirs(_LOADLOG_DIR, exist_ok=True)
+    with open(_LOADLOG_PATH, "a") as f:
+        f.write(msg + "\n")
     return df
 
 
