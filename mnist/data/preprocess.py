@@ -53,18 +53,24 @@ def list_sample_ids(split: str) -> List[str]:
     return sample_ids
 
 
+_WORKER_ID = f"{os.environ.get('HOSTNAME', 'unknown-host')}:{os.getpid()}"
+
+
 @lru_cache(maxsize=_CACHE_SIZE)
 def _load_part(path: str) -> pd.DataFrame:
     """Load one Parquet file into memory. Cached (LRU) across calls.
 
     Only cache misses reach this body, so each log line is one physical file read.
+    The lru_cache is per-process, so pod/pid are logged to distinguish a genuine
+    re-scan by one process from many processes each independently sweeping once.
     """
     start = time.perf_counter()
     df = pd.read_parquet(path, engine="pyarrow")
     elapsed = time.perf_counter() - start
     _load_stats["loads"] += 1
     _load_stats["seconds"] += elapsed
-    msg = (f"[parquet] LOAD {os.path.basename(path)} rows={len(df)} "
+    msg = (f"[parquet] LOAD worker={_WORKER_ID} ts={time.time():.6f} "
+           f"{os.path.basename(path)} rows={len(df)} "
            f"took={elapsed * 1000:.1f}ms total_loads={_load_stats['loads']} "
            f"total_load_time={_load_stats['seconds']:.2f}s cache_max={_CACHE_SIZE}")
     logger.info(msg)
