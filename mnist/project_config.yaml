@@ -18,10 +18,14 @@ parquet:
   samples_per_file: 100
   file_cache_size: 8   # LRU size for loaded Parquet files (in-memory)
 
-# List-of-inputs ("grouped") toggle. When enabled, `preprocess_func_leap` cuts each
-# split's flat sample-id list into `num_groups` disjoint, near-equal groups and returns
-# nested sample_ids (List[List[sample_id]]). The encoders are group-aware either way.
-# Can be overridden at runtime via env vars MNIST_GROUPED=1 / MNIST_NUM_GROUPS=N.
+# List-of-inputs ("grouped") toggle. When enabled, `preprocess_func_leap` returns
+# nested sample_ids (List[List[sample_id]]); the encoders are group-aware either way.
+# by_file: true aligns each group 1:1 with a physical Parquet file (its 100 samples) --
+# the design's actual premise. false instead cuts into `num_groups` arbitrary
+# equal-size slices, which can span many files per group.
+# Can be overridden at runtime via env vars MNIST_GROUPED=1 / MNIST_NUM_GROUPS=N /
+# MNIST_GROUP_BY_FILE=1.
 grouped:
   enabled: true
   num_groups: 4
+  by_file: true

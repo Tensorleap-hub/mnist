@@ -122,6 +122,19 @@ def split_into_groups(sample_ids: List[str], num_groups: int) -> List[List[str]]
     return groups
 
 
+def group_by_file(split: str) -> List[List[str]]:
+    """One group per physical Parquet file (its exact 100 samples), matching the
+    design's actual premise -- 'one Parquet file == one group' -- instead of
+    `split_into_groups`' arbitrary equal-size slicing, which can span many files
+    per group and force the same file to be redecoded once per sub-batch drawn
+    from that oversized group."""
+    rows_per_file = read_manifest(split)["rows"]
+    groups: List[List[str]] = []
+    for file_idx, num_rows in enumerate(rows_per_file):
+        groups.append([f"{file_idx}_{row}" for row in range(num_rows)])
+    return groups
+
+
 def build_split_data(split: str) -> dict:
     """PreprocessResponse.data payload for a split."""
     return {"split": split, "file_paths": list_part_files(split)}

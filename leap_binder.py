@@ -4,7 +4,7 @@ from code_loader.default_metrics import categorical_crossentropy
 from code_loader.visualizers.default_visualizers import default_image_visualizer
 
 from mnist.data.preprocess import (preprocess_func, read_sample_image, read_sample_label,
-                                    compute_class_centroids, split_into_groups)
+                                    compute_class_centroids, split_into_groups, group_by_file)
 from mnist.utils import *
 from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
@@ -13,14 +13,19 @@ from numpy.typing import NDArray
 
 
 def _grouped_settings():
-    """Whether to emit grouped (List[List[sample_id]]) preprocess output, and into how
-    many groups. Reads `grouped:` from project_config.yaml; env vars MNIST_GROUPED /
-    MNIST_NUM_GROUPS override it so flat and grouped can be run without editing files."""
+    """Whether to emit grouped (List[List[sample_id]]) preprocess output, into how
+    many groups, and whether groups should instead align 1:1 with physical Parquet
+    files (`by_file`) rather than being cut into `num_groups` arbitrary equal slices
+    -- the latter can span many files per group and force redundant re-decoding.
+    Reads `grouped:` from project_config.yaml; env vars MNIST_GROUPED / MNIST_NUM_GROUPS /
+    MNIST_GROUP_BY_FILE override it so different configs can be run without editing files."""
     cfg = CONFIG.get('grouped', {}) or {}
     env = os.environ.get('MNIST_GROUPED')
     enabled = (env == '1') if env is not None else bool(cfg.get('enabled', False))
     num_groups = int(os.environ.get('MNIST_NUM_GROUPS', cfg.get('num_groups', 4)))
-    return enabled, num_groups
+    env_by_file = os.environ.get('MNIST_GROUP_BY_FILE')
+    by_file = (env_by_file == '1') if env_by_file is not None else bool(cfg.get('by_file', False))
+    return enabled, num_groups, by_file
 
 
 @tensorleap_preprocess()
@@ -33,12 +38,16 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     train_ids, train_data = splits['train']
     val_ids, val_data = splits['val']
 
-    # List-of-inputs path: cut each split's flat ids into N disjoint groups. The encoders
+    # List-of-inputs path: cut each split's flat ids into disjoint groups. The encoders
     # then receive a whole group per call and return a (B, *) batch (see below).
-    grouped, num_groups = _grouped_settings()
+    grouped, num_groups, by_file = _grouped_settings()
     if grouped:
-        train_ids = split_into_groups(train_ids, num_groups)
-        val_ids = split_into_groups(val_ids, num_groups)
+        if by_file:
+            train_ids = group_by_file('train')
+            val_ids = group_by_file('val')
+        else:
+            train_ids = split_into_groups(train_ids, num_groups)
+            val_ids = split_into_groups(val_ids, num_groups)
 
     train = PreprocessResponse(sample_ids=train_ids, data=train_data, sample_id_type=str)
     val = PreprocessResponse(sample_ids=val_ids, data=val_data, sample_id_type=str)
