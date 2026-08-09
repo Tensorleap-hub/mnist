@@ -29,3 +29,10 @@ grouped:
   enabled: true
   num_groups: 4
   by_file: true
+
+# BF-1147 repro toggle. When enabled, `bf1147_binary_metric` emits None for samples predicted as
+# one of `null_digits` (~10% of MNIST for digit 7), producing a 2-unique-value metric with nulls
+# inside the crash window (>0%, <=20%). Env vars MNIST_BF1147 / MNIST_BF1147_NULL_DIGITS override.
+bf1147:
+  enabled: true
+  null_digits: "7"

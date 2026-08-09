@@ -144,6 +144,38 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
     return metrics_dict
 
 
+def _bf1147_settings():
+    """Whether to emit the BF-1147 repro metric, and for which predicted digits it returns None.
+    Reads `bf1147:` from project_config.yaml (so it takes effect inside the eval pod, where local
+    env vars do not exist); MNIST_BF1147 / MNIST_BF1147_NULL_DIGITS override it locally. The default
+    null digit is 7 (~10% of MNIST), which lands inside the crash window: >0% nulls, and coverage
+    0.9 clears the engine's min_metadata_coverage=0.8 gate."""
+    cfg = CONFIG.get('bf1147', {}) or {}
+    env = os.environ.get('MNIST_BF1147')
+    enabled = (env == '1') if env is not None else bool(cfg.get('enabled', False))
+    digits = os.environ.get('MNIST_BF1147_NULL_DIGITS', str(cfg.get('null_digits', '7')))
+    return enabled, {int(d) for d in str(digits).split(',') if d.strip() != ''}
+
+
+# BF-1147 repro. A per-class binary metric of the shape real projects emit: a float for the samples
+# the class applies to, and None for the ones it does not. code-loader accepts List[float|int|None],
+# so the Nones reach the latent-space store verbatim; the engine then loads the column as an object
+# array. Two unique values puts it under max_unique_values=100, so filter_metrics marks it
+# MatchType.exact, and _encode_metric_targets calls np.unique on the object array -- comparing None
+# to float raises TypeError and takes the whole evaluate job down.
+@tensorleap_custom_metric('bf1147_binary')
+def bf1147_binary_metric(output_pred: NDArray[float]) -> Dict[str, List[Union[float, None]]]:
+    enabled, null_digits = _bf1147_settings()
+    if not enabled:
+        return {'tn': [0.0] * len(output_pred)}
+
+    pred_idx = output_pred.argmax(axis=-1)
+    prob = output_pred.max(axis=-1)
+    values = [None if int(p) in null_digits else float(c > 0.9)
+              for p, c in zip(pred_idx, prob)]
+    return {'tn': values}
+
+
 @tensorleap_custom_loss('categorical_crossentropy_loss')
 def categorical_crossentropy_loss(ground_truth: np.array, prediction: np.array) -> np.array:
     return categorical_crossentropy(ground_truth, prediction)
