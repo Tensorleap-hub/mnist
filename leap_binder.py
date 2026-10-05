@@ -77,6 +77,24 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
     return np.linalg.norm(class_average_image - sample_input)
 
 
+# Custom latent spaces add extra per-sample embeddings, computed from the data alone (no labels),
+# so they are available for the unlabeled set too.
+# This one is the image average-pooled to 7x7 and flattened to 49 values.
+@tensorleap_custom_latent_space(name='custom_name')
+def pooled_image_latent_space(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
+    image = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    return image.reshape(7, 4, 7, 4).mean(axis=(1, 3)).flatten().astype('float32')
+
+
+# Euclidean distance of the image from each class average image, one value per class.
+@tensorleap_custom_latent_space(name='this_is_custom')
+def class_centroid_distances_latent_space(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
+    sample_input = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    classes_avg_images = leap_binder.cache_container["classes_avg_images"]
+    return np.array([np.linalg.norm(classes_avg_images[label] - sample_input) for label in CONFIG['LABELS']],
+                    dtype='float32')
+
+
 @tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
 def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
     return LeapHorizontalBar(np.squeeze(data), gt=np.squeeze(gt), labels=CONFIG['LABELS'])

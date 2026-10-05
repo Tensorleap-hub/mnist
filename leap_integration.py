@@ -5,7 +5,8 @@ from code_loader.plot_functions.visualize import visualize
 from mnist.config import CONFIG
 from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
-                         metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
+                         metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid,
+                         pooled_image_latent_space, class_centroid_distances_latent_space)
 import tensorflow as tf
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 from leap_binder import unlabeled_preprocess_func_leap
@@ -38,6 +39,9 @@ def check_custom_test_mapping(idx, subset):
     m1 = metadata_sample_index(idx, subset)
     m2 = metadata_one_hot_digit(idx, subset)
     m3 = metadata_euclidean_distance_from_class_centroid(idx, subset)
+
+    ls1 = pooled_image_latent_space(idx, subset)
+    ls2 = class_centroid_distances_latent_space(idx, subset)
 
     # here the user can return whatever he wants
 
