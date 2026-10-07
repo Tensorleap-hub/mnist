@@ -8,12 +8,16 @@ from code_loader.inner_leap_binder.leapbinder_decorators import *
 from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirection
 from numpy.typing import NDArray
 
+# Std of the Gaussian noise added to repeated samples (pixels are in [0, 1]).
+NOISE_STD = 0.1
+
 
 @tensorleap_unlabeled_preprocess()
 def unlabeled_preprocess_func_leap() -> PreprocessResponse:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
 
-    val = PreprocessResponse(length=100_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
+    # The unlabeled set reuses the validation images, so all of its samples get noise (clean_samples=0).
+    val = PreprocessResponse(length=100_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X), 'clean_samples': 0, 'noise_seed': 2}, state=DataStateType.validation)
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     return val
 
@@ -22,18 +26,29 @@ def unlabeled_preprocess_func_leap() -> PreprocessResponse:
 def preprocess_func_leap() -> List[PreprocessResponse]:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
 
-    train = PreprocessResponse(length=800_000, data={'images': train_X, 'labels': train_Y, 'num_samples': len(train_X)}, state=DataStateType.training)
-    val = PreprocessResponse(length=150_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X)}, state=DataStateType.validation)
+    train = PreprocessResponse(length=800_000, data={'images': train_X, 'labels': train_Y, 'num_samples': len(train_X), 'clean_samples': len(train_X), 'noise_seed': 0}, state=DataStateType.training)
+    val = PreprocessResponse(length=150_000, data={'images': val_X, 'labels': val_Y, 'num_samples': len(val_X), 'clean_samples': len(val_X), 'noise_seed': 1}, state=DataStateType.validation)
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
+
+
+# Each subset is longer than its data, so sample `idx` reads image `idx % num_samples`.
+# Samples from `clean_samples` on are repeats, so they get Gaussian noise seeded by (noise_seed, idx):
+# the same sample always gets the same noise, and no two samples are identical.
+def get_image(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
+    image = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    if idx < preprocess.data['clean_samples']:
+        return image
+    rng = np.random.default_rng([preprocess.data['noise_seed'], idx])
+    return np.clip(image + rng.normal(0, NOISE_STD, image.shape), 0, 1)
 
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
 # the PreprocessResponse data. Returns a numpy array containing the sample's image.
 @tensorleap_input_encoder('image', channel_dim=-1)
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    return preprocess.data['images'][idx % preprocess.data['num_samples']].astype('float32')
+    return get_image(idx, preprocess).astype('float32')
 
 
 # Ground truth encoder fetches the label with the index `idx` from the `labels` array set in
@@ -70,7 +85,7 @@ def metadata_one_hot_digit(idx: int, preprocess: PreprocessResponse) -> Dict[str
 def metadata_euclidean_distance_from_class_centroid(idx: int,
                                                     preprocess: Union[PreprocessResponse, list]) -> np.ndarray:
     ### calculate euclidean distance from the average image of the specific class
-    sample_input = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    sample_input = get_image(idx, preprocess)
     label = preprocess.data['labels'][idx % preprocess.data['num_samples']]
     label = str(np.argmax(label))
     class_average_image = leap_binder.cache_container["classes_avg_images"][label]
@@ -82,14 +97,14 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
 # This one is the image average-pooled to 7x7 and flattened to 49 values.
 @tensorleap_custom_latent_space(name='custom_name')
 def pooled_image_latent_space(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    image = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    image = get_image(idx, preprocess)
     return image.reshape(7, 4, 7, 4).mean(axis=(1, 3)).flatten().astype('float32')
 
 
 # Euclidean distance of the image from each class average image, one value per class.
 @tensorleap_custom_latent_space(name='this_is_custom')
 def class_centroid_distances_latent_space(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
-    sample_input = preprocess.data['images'][idx % preprocess.data['num_samples']]
+    sample_input = get_image(idx, preprocess)
     classes_avg_images = leap_binder.cache_container["classes_avg_images"]
     return np.array([np.linalg.norm(classes_avg_images[label] - sample_input) for label in CONFIG['LABELS']],
                     dtype='float32')
