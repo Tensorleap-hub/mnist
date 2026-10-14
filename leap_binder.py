@@ -9,9 +9,20 @@ from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirec
 from numpy.typing import NDArray
 
 
+def _load_splits():
+    # The last `unlabeled_size` training samples are held out as the unlabeled set.
+    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+    train_X, train_Y = train_X[:CONFIG['train_size']], train_Y[:CONFIG['train_size']]
+    val_X, val_Y = val_X[:CONFIG['val_size']], val_Y[:CONFIG['val_size']]
+    n_unlabeled = CONFIG['unlabeled_size']
+    unlabeled_X, unlabeled_Y = train_X[-n_unlabeled:], train_Y[-n_unlabeled:]
+    train_X, train_Y = train_X[:-n_unlabeled], train_Y[:-n_unlabeled]
+    return train_X, val_X, unlabeled_X, train_Y, val_Y, unlabeled_Y
+
+
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
-    train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+    train_X, val_X, _, train_Y, val_Y, _ = _load_splits()
 
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
@@ -21,6 +32,15 @@ def preprocess_func_leap() -> List[PreprocessResponse]:
     leap_binder.cache_container["classes_avg_images"] = calc_classes_centroid(train_X, train_Y)
     response = [train, val]
     return response
+
+
+# The platform never calls the GT encoder on this set. Labels are kept in `data` so the
+# label-derived metadata still describes these samples.
+@tensorleap_unlabeled_preprocess()
+def unlabeled_preprocess_func_leap() -> PreprocessResponse:
+    _, _, unlabeled_X, _, _, unlabeled_Y = _load_splits()
+    return PreprocessResponse(length=len(unlabeled_X), data={'images': unlabeled_X, 'labels': unlabeled_Y},
+                              state=DataStateType.unlabeled)
 
 
 # Input encoder fetches the image with the index `idx` from the `images` array set in
@@ -41,6 +61,7 @@ def gt_encoder(idx: int, preprocessing: PreprocessResponse) -> np.ndarray:
 # This metadata adds the int digit of each sample (not a hot vector).
 @tensorleap_metadata('metadata_sample_index')
 def metadata_sample_index(idx: int, preprocess: PreprocessResponse) -> int:
+    #raise Exception("fdadfs")
     return idx
 
 
@@ -73,7 +94,7 @@ def metadata_euclidean_distance_from_class_centroid(idx: int,
 
 @tensorleap_custom_visualizer('horizontal_bar_classes', LeapHorizontalBar.type)
 def combined_bar(data: NDArray[float], gt:NDArray[float]) -> LeapHorizontalBar:
-    return LeapHorizontalBar(np.squeeze(data), gt=np.squeeze(gt), labels=CONFIG['LABELS'])
+    return LeapHorizontalBar(np.squeeze(data) * 0.99, gt=np.squeeze(gt), labels=CONFIG['LABELS'])
 
 
 @tensorleap_custom_metric('metrics',direction=MetricDirection.Downward)

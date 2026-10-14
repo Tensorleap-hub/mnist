@@ -11,3 +11,7 @@ LABELS:
   - "9"
 
 local_file_path: "mnist"
+# Number of training samples (taken from the end of the train split) exposed as unlabeled data.
+unlabeled_size: 500
+train_size: 4500
+val_size: 1000
