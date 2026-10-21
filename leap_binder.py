@@ -93,17 +93,36 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
 IMMENSE_BYTES = 40_000  # > Elasticsearch keyword max term length (32766)
 
 
+# Two ways Elasticsearch rejects a metrics doc, which the engine then silently drops.
+# Validation idx % 4 == 0 -> oversized string; idx % 4 == 1 -> 'NaT' in a date-detected field.
+# Validation idx % 4 in (2, 3) and all training samples are clean controls.
+def _is_oversized_sample(idx: int, preprocess: PreprocessResponse) -> bool:
+    return preprocess.state == DataStateType.validation and idx % 4 == 0
+
+
+def _is_nat_sample(idx: int, preprocess: PreprocessResponse) -> bool:
+    return preprocess.state == DataStateType.validation and idx % 4 == 1
+
+
 @tensorleap_metadata('evaluation_table_json', DatasetMetadataType.string)
 def evaluation_table_json(idx: int, preprocess: PreprocessResponse) -> str:
     """Mimics the Blue River integration: a JSON dump of the whole evaluation-table row.
-    Validation rows come from the wide evaluation table (huge), training rows from the
-    small dataset table."""
+    Rows selected by _is_oversized_sample exceed the keyword limit; all others are small."""
     digit = int(preprocess.data['labels'][idx].argmax())
-    if preprocess.state == DataStateType.validation:
+    if _is_oversized_sample(idx, preprocess):
         payload = {f'col_{i}': f'{digit}-{idx}-' + 'x' * 20 for i in range(IMMENSE_BYTES // 30)}
     else:
         payload = {'digit': digit, 'idx': idx}
     return json.dumps(payload, sort_keys=True, separators=(',', ':'))
+
+
+@tensorleap_metadata('annotation_updated_at', DatasetMetadataType.string)
+def annotation_updated_at(idx: int, preprocess: PreprocessResponse) -> str:
+    """Mimics Blue River's timestamp columns: pandas NaT is serialized as the string 'NaT'.
+    Rows selected by _is_nat_sample get 'NaT'; all others carry a real ISO timestamp."""
+    if _is_nat_sample(idx, preprocess):
+        return 'NaT'
+    return f'2026-08-{idx % 28 + 1:02d}T10:00:00'
 
 
 @tensorleap_custom_loss('categorical_crossentropy_loss')

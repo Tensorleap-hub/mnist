@@ -6,7 +6,7 @@ from mnist.config import CONFIG
 from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid,
-                         evaluation_table_json)
+                         evaluation_table_json, annotation_updated_at)
 import tensorflow as tf
 import numpy as np
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
@@ -41,6 +41,7 @@ def check_custom_test_mapping(idx, subset):
     m2 = metadata_one_hot_digit(idx, subset)
     m3 = metadata_euclidean_distance_from_class_centroid(idx, subset)
     m4 = evaluation_table_json(idx, subset)
+    m5 = annotation_updated_at(idx, subset)
 
     # here the user can return whatever he wants
 
