@@ -5,13 +5,17 @@ from mnist.data.preprocess import preprocess_func
 from mnist.utils import *
 from mnist.config import CONFIG
 from code_loader.inner_leap_binder.leapbinder_decorators import *
-from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirection
+from code_loader.contract.datasetclasses import DatasetMetadataType, MetricDirection, SamplePreprocessResponse
 from numpy.typing import NDArray
+from typing import Optional
+import json
 
 
 @tensorleap_preprocess()
 def preprocess_func_leap() -> List[PreprocessResponse]:
     train_X, val_X, train_Y, val_Y = preprocess_func(CONFIG['local_file_path'])
+    train_X, train_Y = train_X[:2000], train_Y[:2000]
+    val_X, val_Y = val_X[:1000], val_Y[:1000]
 
     # Generate a PreprocessResponse for each data slice, to later be read by the encoders.
     # The length of each data slice is provided, along with the data dictionary.
@@ -83,6 +87,23 @@ def metrics(output_pred: NDArray[float]) -> Dict[str, NDArray[Union[float, int]]
     metrics_dict = {'prob': prob,
                     'prd_idx': pred_idx}
     return metrics_dict
+
+
+
+IMMENSE_BYTES = 40_000  # > Elasticsearch keyword max term length (32766)
+
+
+@tensorleap_metadata('evaluation_table_json', DatasetMetadataType.string)
+def evaluation_table_json(idx: int, preprocess: PreprocessResponse) -> str:
+    """Mimics the Blue River integration: a JSON dump of the whole evaluation-table row.
+    Validation rows come from the wide evaluation table (huge), training rows from the
+    small dataset table."""
+    digit = int(preprocess.data['labels'][idx].argmax())
+    if preprocess.state == DataStateType.validation:
+        payload = {f'col_{i}': f'{digit}-{idx}-' + 'x' * 20 for i in range(IMMENSE_BYTES // 30)}
+    else:
+        payload = {'digit': digit, 'idx': idx}
+    return json.dumps(payload, sort_keys=True, separators=(',', ':'))
 
 
 @tensorleap_custom_loss('categorical_crossentropy_loss')
