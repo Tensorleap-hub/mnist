@@ -6,7 +6,7 @@ from mnist.config import CONFIG
 from leap_binder import (input_encoder, preprocess_func_leap, gt_encoder,
                          combined_bar, metrics, image_visualizer, categorical_crossentropy_loss,
                          metadata_sample_index, metadata_one_hot_digit, metadata_euclidean_distance_from_class_centroid)
-import tensorflow as tf
+import onnxruntime as ort
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 
 prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'], channel_dim=-1)
@@ -14,8 +14,8 @@ prediction_type1 = PredictionTypeHandler('classes', CONFIG['LABELS'], channel_di
 @tensorleap_load_model([prediction_type1])
 def load_model():
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    model_path = 'model/model.h5'
-    cnn = tf.keras.models.load_model(os.path.join(dir_path, model_path))
+    model_path = 'model/model.onnx'
+    cnn = ort.InferenceSession(os.path.join(dir_path, model_path))
     return cnn
 
 
@@ -25,7 +25,7 @@ def check_custom_test_mapping(idx, subset):
     gt = gt_encoder(idx, subset)
 
     cnn = load_model()
-    y_pred = cnn([image])
+    y_pred = cnn.run(None, {cnn.get_inputs()[0].name: image})[0]
     both_vis = combined_bar(y_pred, gt)
     img_vis = image_visualizer(image)
 
