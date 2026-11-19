@@ -108,7 +108,7 @@ tensorleap auth login [api url] -k [api key].
 To deploy your local changes:
 
 ```
-leap project push model/model.h5
+leap project push model/model.onnx
 ```
 
 ### **Tensorleap files**
